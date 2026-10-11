@@ -5,77 +5,43 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>침실 노드 시연</title>
 <style>
-/* Apple DESIGN.md(getdesign.md) 기준: 흰색/Parchment 캔버스, Action Blue 하나, 그림자·그라데이션 없음, 18px 카드, 알약 버튼 */
+/* Apple DESIGN.md(getdesign.md) 기준: 검정 글로벌 내비 + 하나의 어두운 장면, Sky Blue 하나, 그림자·그라데이션 없음 */
 @font-face { font-family: "Pretendard"; src: local("Pretendard Variable"), url("fonts/PretendardVariable.woff2") format("woff2"); font-weight: 45 920; font-display: swap; }
-:root {
-  --canvas: #ffffff; --parchment: #f5f5f7; --pearl: #fafafc; --ink: #1d1d1f; --ink-80: #333333; --muted: #7a7a7a;
-  --hairline: #e0e0e0; --divider: #f0f0f0; --blue: #0066cc; --blue-focus: #0071e3; --sky: #2997ff;
-  --tile-dark: #272729; --warn: #bf4800; --danger: #e30000;
-}
+:root { --black: #000000; --ink-on-dark: #ffffff; --muted: #aeaeb2; --muted-2: #8e8e93; --sky: #2997ff; --blue: #0066cc; --hair: #3a3a3c; }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
-body { margin: 0; background: var(--parchment); color: var(--ink); font-family: "Pretendard", system-ui, sans-serif; font-size: 17px; line-height: 1.47; letter-spacing: -0.01em; display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
-header { display: flex; align-items: center; gap: 12px; padding: 12px 24px; background: rgba(245, 245, 247, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0, 0, 0, 0.08); flex-wrap: wrap; }
-header h1 { font-size: 21px; font-weight: 600; margin: 0 16px 0 0; }
-.clock { font-size: 34px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+body { margin: 0; background: var(--black); color: var(--ink-on-dark); font-family: "Pretendard", system-ui, sans-serif; letter-spacing: -0.01em; display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
+header { display: flex; align-items: center; gap: 12px; padding: 10px 24px; background: var(--black); border-bottom: 1px solid #1c1c1e; flex-wrap: wrap; }
+header h1 { font-size: 20px; font-weight: 600; margin: 0 16px 0 0; }
+.clock { font-size: 32px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
 .out { color: var(--muted); font-size: 17px; margin-right: auto; font-variant-numeric: tabular-nums; }
-.pill { font: inherit; font-size: 15px; padding: 9px 20px; border-radius: 9999px; cursor: pointer; border: 1px solid var(--blue); background: transparent; color: var(--blue); transition: transform .12s; }
+.pill { font: inherit; font-size: 15px; padding: 8px 20px; border-radius: 9999px; cursor: pointer; border: 1px solid var(--sky); background: transparent; color: var(--sky); transition: transform .12s; }
 .pill:active { transform: scale(0.95); }
-.pill:focus-visible { outline: 2px solid var(--blue-focus); outline-offset: 2px; }
-.pill.primary { background: var(--blue); color: #fff; }
-select.pill { appearance: none; }
-#conn.on { border-color: var(--ink); color: var(--ink); }
-#mode { font-size: 14px; color: var(--muted); padding: 7px 14px; border-radius: 9999px; background: var(--canvas); border: 1px solid var(--hairline); }
-#mode.board { color: var(--blue); }
-main { flex: 1; min-height: 0; padding: 20px 24px; display: grid; gap: 20px; grid-template-columns: 1.3fr 1fr 0.9fr; grid-template-rows: auto minmax(0, 1fr); }
-.tile { background: var(--canvas); border: 1px solid var(--hairline); border-radius: 18px; padding: 20px 24px; min-height: 0; display: flex; flex-direction: column; }
-.title { font-size: 17px; font-weight: 600; margin-bottom: 10px; }
-.title small { font-size: 14px; font-weight: 400; color: var(--muted); margin-left: 8px; }
-#roomTile { grid-column: 1; grid-row: 1; background: var(--tile-dark); border-color: var(--tile-dark); padding: 0; overflow: hidden; justify-content: center; }
-#room { width: 100%; height: 100%; min-height: 0; display: block; overflow: visible; }
-#chartTile { grid-column: 1; grid-row: 2; }
-#numTile { grid-column: 2; grid-row: 1; gap: 8px; }
-#bandTile { grid-column: 2; grid-row: 2; }
-#matterTile { grid-column: 3; grid-row: 1; }
-#logTile { grid-column: 3; grid-row: 2; }
-.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 6px; }
-.label { font-size: 14px; color: var(--muted); }
-.big { font-size: clamp(42px, 6.2vh, 64px); font-weight: 600; line-height: 1.05; letter-spacing: -0.035em; font-variant-numeric: tabular-nums; }
-.sub { font-size: 14px; color: var(--muted); }
-#srh { color: var(--blue); } #srh.warn { color: var(--warn); } #srh.danger { color: var(--danger); }
-.chips { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 4px 0 6px; }
-.chip { display: flex; justify-content: space-between; align-items: center; font-size: clamp(16px, 2.1vh, 19px); padding: 10px 18px; border-radius: 9999px; border: 1px solid var(--hairline); color: var(--muted); }
-.chip b { font-weight: 600; }
-.chip.on { border: 2px solid var(--blue-focus); color: var(--blue); padding: 9px 17px; }
-.kv { display: flex; justify-content: space-between; align-items: baseline; font-size: clamp(14px, 1.9vh, 17px); padding: 8px 0; border-top: 1px solid var(--divider); }
-.kv span { color: var(--ink-80); }
-.kv b { font-weight: 600; font-variant-numeric: tabular-nums; }
-#crisk { color: var(--danger); }
-canvas { width: 100%; display: block; }
-#chart { flex: 1; min-height: 0; }
-.ep { display: grid; grid-template-columns: 40px 1fr auto; gap: 8px; font-size: 16px; padding: 8px 0; border-top: 1px solid var(--divider); align-items: baseline; }
-.ep span:first-child { color: var(--muted); font-size: 13px; }
-.ep b { font-weight: 600; font-variant-numeric: tabular-nums; }
-#mstat { margin-top: 12px; font-size: 14px; line-height: 1.5; padding: 10px 14px; border-radius: 11px; background: var(--pearl); border: 3px solid var(--divider); color: var(--ink-80); transition: border-color .4s; }
-#mstat b { color: var(--ink); font-weight: 600; }
-#mstat.flash { border-color: var(--blue-focus); }
-#mcmd { font-size: 14px; color: var(--muted); margin-top: 8px; }
-#log { flex: 1; min-height: 0; overflow: auto; margin: 0; padding: 0; list-style: none; font-size: 15px; }
-#log li { padding: 7px 0; border-top: 1px solid var(--divider); color: var(--ink-80); }
-#log li time { color: var(--muted); font-variant-numeric: tabular-nums; margin-right: 8px; }
-#log li.fan { color: var(--blue); } #log li.humid { color: var(--ink); } #log li.app { color: var(--warn); }
-/* 방 그림 (밤의 침실) */
+.pill:focus-visible { outline: 2px solid var(--sky); outline-offset: 2px; }
+.pill.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+select.pill { appearance: none; background: transparent; }
+select.pill option { color: #000; }
+#conn.on { border-color: var(--muted-2); color: var(--muted); }
+#mode { font-size: 14px; color: var(--muted); padding: 7px 14px; border-radius: 9999px; border: 1px solid var(--hair); }
+#mode.board { color: var(--sky); border-color: var(--sky); }
+main { flex: 1; min-height: 0; position: relative; overflow: hidden; }
+#scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; font-family: "Pretendard", system-ui, sans-serif; }
+#scene text { letter-spacing: -0.01em; }
+.panel { fill: #2c2c2e; fill-opacity: .92; stroke: #3a3a3c; stroke-width: 1.5; }
+.cap { fill: var(--muted); font-size: 19px; }
+.val { fill: #fff; font-size: 104px; font-weight: 600; letter-spacing: -3px; font-variant-numeric: tabular-nums; }
+.lbl { fill: var(--muted-2); font-size: 16px; }
+.state { font-size: 23px; font-weight: 600; }
+/* 장면 애니메이션 */
 #blades { fill: #636366; transform-box: fill-box; transform-origin: center; }
 .fan-on #blades { fill: var(--sky); animation: spin .45s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-#air path { stroke-dasharray: 7 9; opacity: 0; }
+#air path { stroke-dasharray: 10 12; opacity: 0; }
 .fan-on #air path { opacity: .9; animation: flow .6s linear infinite; }
-@keyframes flow { to { stroke-dashoffset: 32; } }
+@keyframes flow { to { stroke-dashoffset: 44; } }
 #mist circle { opacity: 0; transform-box: fill-box; transform-origin: center; }
 .hum-on #mist circle { animation: mist 2.4s ease-out infinite; }
-@keyframes mist { 0% { transform: translateY(0) scale(.6); opacity: 0; } 25% { opacity: .8; } 100% { transform: translateY(-80px) scale(1.9); opacity: 0; } }
-@media (max-height: 800px) { main { gap: 12px; padding: 12px 16px; } .tile { padding: 14px 18px; } #bandTile .sub { display: none; } .title small { display: none; } header { padding: 8px 16px; } }
-@media (max-width: 1100px) { main { grid-template-columns: 1fr; grid-template-rows: none; } #roomTile, #chartTile, #numTile, #bandTile, #matterTile, #logTile { grid-column: 1; grid-row: auto; } #chartTile, #logTile { height: 300px; } }
+@keyframes mist { 0% { transform: translateY(0) scale(.6); opacity: 0; } 25% { opacity: .8; } 100% { transform: translateY(-120px) scale(2); opacity: 0; } }
 </style>
 </head>
 <body>
@@ -94,101 +60,133 @@ canvas { width: 100%; display: block; }
   <button id="play" class="pill primary">▶ 한파의 밤</button>
 </header>
 <main>
-  <div class="tile" id="roomTile">
-    <svg id="room" viewBox="0 0 800 420" preserveAspectRatio="xMidYMid meet" role="img" aria-label="가상 침실 단면">
-      <rect x="-2000" y="-2000" width="2150" height="4420" fill="#000000"/>
-      <g fill="#ffffff" opacity=".45"><circle cx="30" cy="120" r="1.5"/><circle cx="96" cy="150" r="1.2"/><circle cx="58" cy="210" r="1.4"/><circle cx="118" cy="250" r="1"/><circle cx="40" cy="300" r="1.2"/></g>
-      <text x="75" y="48" fill="#cccccc" font-size="17" text-anchor="middle">바깥</text>
-      <text id="r-out" x="75" y="84" fill="#ffffff" font-size="30" font-weight="600" text-anchor="middle">2℃</text>
-      <rect x="150" y="-2000" width="56" height="4420" fill="#48484a"/>
-      <text x="178" y="416" fill="#8e8e93" font-size="12" text-anchor="middle">외벽</text>
-      <rect id="r-surf" x="206" y="-2000" width="10" height="2400" fill="#64d2ff"/>
-      <g id="drops" fill="#64d2ff" opacity="0">
-        <circle cx="211" cy="60" r="4"/><circle cx="211" cy="120" r="5"/><circle cx="211" cy="190" r="4"/>
-        <circle cx="211" cy="260" r="5"/><circle cx="211" cy="330" r="4"/>
-      </g>
-      <rect x="216" y="-2000" width="2800" height="2400" fill="#2c2c2e"/>
-      <rect x="150" y="400" width="2850" height="2020" fill="#3a3a3c"/>
-      <text id="r-wall" x="232" y="40" font-size="16" fill="#cccccc">벽 표면 --℃</text>
-      <text id="r-wsrh" x="232" y="72" font-size="28" font-weight="600" fill="#2997ff">표면 습도 --%</text>
-      <text id="r-room" x="780" y="40" font-size="16" fill="#cccccc" text-anchor="end">실내 21℃ · --%</text>
-      <g id="air" stroke="#2997ff" stroke-width="3" fill="none" stroke-linecap="round">
-        <path d="M 282 225 L 226 210"/><path d="M 282 250 L 226 250"/><path d="M 282 275 L 226 290"/>
-      </g>
-      <line x1="330" y1="292" x2="330" y2="398" stroke="#8e8e93" stroke-width="5"/>
-      <ellipse cx="330" cy="398" rx="30" ry="5" fill="#8e8e93"/>
-      <circle cx="330" cy="250" r="46" fill="#1c1c1e" stroke="#8e8e93" stroke-width="3"/>
-      <g id="blades">
-        <ellipse cx="330" cy="226" rx="10" ry="22"/>
-        <ellipse cx="330" cy="226" rx="10" ry="22" transform="rotate(120 330 250)"/>
-        <ellipse cx="330" cy="226" rx="10" ry="22" transform="rotate(240 330 250)"/>
-      </g>
-      <circle cx="330" cy="250" r="6" fill="#d1d1d6"/>
-      <text id="r-fan" x="330" y="188" font-size="16" text-anchor="middle" fill="#8e8e93">선풍기 OFF</text>
-      <g id="mist" fill="#e5e5ea">
-        <circle cx="440" cy="318" r="8" style="animation-delay:0s"/>
-        <circle cx="448" cy="318" r="7" style="animation-delay:.8s"/>
-        <circle cx="434" cy="318" r="7" style="animation-delay:1.6s"/>
-      </g>
-      <rect x="415" y="330" width="50" height="68" rx="12" fill="#3a3a3c" stroke="#8e8e93" stroke-width="2"/>
-      <rect x="434" y="322" width="12" height="10" rx="2" fill="#8e8e93"/>
-      <text id="r-hum" x="440" y="294" font-size="16" text-anchor="middle" fill="#8e8e93">가습기 OFF</text>
-      <rect x="505" y="347" width="280" height="51" rx="4" fill="#48484a"/>
-      <rect x="510" y="327" width="270" height="24" rx="8" fill="#636366"/>
-      <rect x="715" y="313" width="58" height="22" rx="9" fill="#8e8e93"/>
-      <g transform="translate(600 150)">
-        <rect x="0" y="0" width="120" height="66" rx="8" fill="#0f3d2e"/>
-        <circle id="led0" cx="22" cy="48" r="5.5" fill="#30d158"/>
-        <circle id="led1" cx="46" cy="48" r="5.5" fill="#1c3329"/>
-        <circle id="led2" cx="70" cy="48" r="5.5" fill="#1c3329"/>
-        <circle id="led3" cx="94" cy="48" r="5.5" fill="#1c3329"/>
-        <text x="60" y="25" font-size="14" font-weight="600" fill="#ffffff" text-anchor="middle">판단 노드</text>
-        <text x="60" y="88" font-size="12" fill="#8e8e93" text-anchor="middle">nRF54LM20 · Matter over Thread</text>
-      </g>
-    </svg>
-  </div>
+<svg id="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet" overflow="visible" role="img" aria-label="가상 침실과 판단 노드">
+  <!-- 배경: 바깥 · 외벽 · 벽 표면 · 방 · 바닥 (어떤 화면 비율에서도 꽉 차도록 viewBox 밖까지) -->
+  <rect x="-4000" y="-4000" width="4230" height="9000" fill="#000"/>
+  <g fill="#fff" opacity=".4"><circle cx="40" cy="190" r="2"/><circle cx="150" cy="250" r="1.5"/><circle cx="90" cy="330" r="1.8"/><circle cx="190" cy="420" r="1.4"/><circle cx="60" cy="520" r="1.6"/><circle cx="170" cy="600" r="1.2"/></g>
+  <text x="115" y="72" text-anchor="middle" class="cap">바깥</text>
+  <text id="v-out" x="115" y="128" text-anchor="middle" fill="#fff" font-size="48" font-weight="600" letter-spacing="-1">2℃</text>
+  <rect x="230" y="-4000" width="90" height="9000" fill="#3a3a3c"/>
+  <rect id="r-surf" x="320" y="-4000" width="14" height="4700" fill="#5e8fb3"/>
+  <g id="drops" fill="#64d2ff" opacity="0"><circle cx="327" cy="120" r="6"/><circle cx="327" cy="230" r="7"/><circle cx="327" cy="350" r="6"/><circle cx="327" cy="470" r="7"/><circle cx="327" cy="590" r="6"/></g>
+  <rect x="334" y="-4000" width="5000" height="4700" fill="#1f1f21"/>
+  <rect x="230" y="700" width="5000" height="4000" fill="#161618"/>
+  <text x="275" y="690" text-anchor="middle" class="lbl">외벽</text>
 
-  <div class="tile" id="numTile">
-    <div class="pair">
-      <div><div class="label">실내 습도 · 방 습도계</div><div class="big" id="rh">--</div><div class="sub" id="ah">절대습도 -- g/㎥</div></div>
-      <div><div class="label">벽 표면 습도 · 노드 계산</div><div class="big" id="srh">--</div><div class="sub" id="wall">정지선 75% · 임계 80%</div></div>
-    </div>
-    <div class="chips">
-      <div class="chip humid" id="hum"><span>가습기</span><b>-</b></div>
-      <div class="chip fan" id="fan"><span>선풍기</span><b>-</b></div>
-    </div>
-    <div class="kv"><span>임계 80%까지 예측</span><b id="eta">--</b></div>
-    <div class="kv"><span>학습한 선풍기 효과</span><b id="gain">아직 학습 전</b></div>
-    <div class="kv"><span>누적 위험 시간 · 우리 노드</span><b id="risk">0분</b></div>
-    <div class="kv"><span>누적 위험 시간 · 일반 가습기 60%</span><b id="crisk">0분</b></div>
-  </div>
+  <!-- 같은 방, 다른 습도 -->
+  <rect class="panel" x="360" y="36" width="330" height="200" rx="20"/>
+  <text x="384" y="76" class="cap">벽 표면 습도 · 노드 계산</text>
+  <text id="v-srh" x="380" y="172" class="val" fill="#2997ff">--</text>
+  <text id="v-wall" x="384" y="214" class="cap" font-size="17">벽 표면 --℃ · 정지선 75 · 임계 80</text>
+  <rect class="panel" x="712" y="36" width="330" height="200" rx="20"/>
+  <text x="736" y="76" class="cap">실내 습도 · 방 습도계</text>
+  <text id="v-rh" x="732" y="172" class="val">--</text>
+  <text id="v-ah" x="736" y="214" class="cap" font-size="17">절대습도 -- g/㎥ · 목표 6 이상</text>
 
-  <div class="tile" id="chartTile">
-    <div class="title">밤새 습도<small>회색 실내 · 파랑 벽 표면 · 빨강 점선 일반 가습기였다면 · 옅은 띠 선풍기 가동</small></div>
-    <canvas id="chart"></canvas>
-  </div>
+  <!-- 표 3: 지금 허용되는 실내 습도 -->
+  <rect class="panel" x="360" y="252" width="682" height="104" rx="20"/>
+  <text x="384" y="286" class="cap">허용 실내 습도 · 표 3</text>
+  <text id="b-label" x="1018" y="287" text-anchor="end" fill="#fff" font-size="22" font-weight="600">--</text>
+  <rect x="384" y="304" width="634" height="22" rx="11" fill="#3a3a3c"/>
+  <rect id="b-nofan" x="384" y="299" width="0" height="32" rx="8" fill="none" stroke="#8e8e93" stroke-width="2" stroke-dasharray="6 5" opacity="0"/>
+  <rect id="b-allowed" x="384" y="304" width="0" height="22" rx="11" fill="#2997ff" fill-opacity=".5"/>
+  <rect id="b-marker" x="384" y="294" width="4" height="42" rx="2" fill="#fff"/>
+  <text x="384" y="348" class="lbl" font-size="14">20%</text>
+  <text id="b-nofan-lbl" x="701" y="348" text-anchor="middle" class="lbl" font-size="14"></text>
+  <text x="1018" y="348" text-anchor="end" class="lbl" font-size="14">70%</text>
 
-  <div class="tile" id="bandTile">
-    <div class="title">허용 실내 습도<small>표 3 · 지금 벽 온도 기준</small></div>
-    <canvas id="band" data-h="130"></canvas>
-    <div class="sub" style="margin-top:8px">하한은 절대습도 6 g/㎥(점막 방어), 상한은 벽 표면 80%(곰팡이). 점선은 선풍기가 없을 때의 범위입니다.</div>
-  </div>
+  <!-- 선풍기 -->
+  <g id="air" stroke="#2997ff" stroke-width="4" fill="none" stroke-linecap="round">
+    <path d="M 432 470 L 346 452"/><path d="M 432 500 L 346 500"/><path d="M 432 530 L 346 548"/>
+  </g>
+  <rect x="516" y="576" width="8" height="124" fill="#8e8e93"/>
+  <ellipse cx="520" cy="700" rx="46" ry="7" fill="#8e8e93"/>
+  <circle cx="520" cy="500" r="76" fill="#161618" stroke="#8e8e93" stroke-width="4"/>
+  <g id="blades">
+    <ellipse cx="520" cy="463" rx="16" ry="34"/>
+    <ellipse cx="520" cy="463" rx="16" ry="34" transform="rotate(120 520 500)"/>
+    <ellipse cx="520" cy="463" rx="16" ry="34" transform="rotate(240 520 500)"/>
+  </g>
+  <circle cx="520" cy="500" r="9" fill="#d1d1d6"/>
+  <text id="l-fan" x="520" y="386" text-anchor="middle" class="state" fill="#8e8e93">선풍기 OFF</text>
+  <text id="l-gain" x="520" y="410" text-anchor="middle" class="lbl"> </text>
 
-  <div class="tile" id="matterTile">
-    <div class="title">Matter 연동<small>노드 → SmartThings 허브</small></div>
-    <div class="ep"><span>EP1</span><span>선풍기 On/Off</span><b id="ep1">-</b></div>
-    <div class="ep"><span>EP5</span><span>가습기 On/Off</span><b id="ep5">-</b></div>
-    <div class="ep"><span>EP2</span><span>벽 표면 습도</span><b id="ep2">-</b></div>
-    <div class="ep"><span>EP3</span><span>실내 습도</span><b id="ep3">-</b></div>
-    <div class="ep"><span>EP4</span><span>벽 표면 온도</span><b id="ep4">-</b></div>
-    <div id="mstat">보드를 연결하면 허브 보고가 여기 표시됩니다</div>
-    <div id="mcmd"></div>
-  </div>
+  <!-- 가습기 -->
+  <g id="mist" fill="#e5e5ea">
+    <circle cx="770" cy="572" r="12" style="animation-delay:0s"/>
+    <circle cx="780" cy="572" r="10" style="animation-delay:.8s"/>
+    <circle cx="762" cy="572" r="10" style="animation-delay:1.6s"/>
+  </g>
+  <rect x="730" y="590" width="80" height="110" rx="18" fill="#2c2c2e" stroke="#8e8e93" stroke-width="3"/>
+  <rect x="762" y="578" width="16" height="14" rx="3" fill="#8e8e93"/>
+  <text id="l-hum" x="830" y="646" class="state" fill="#8e8e93">가습기 OFF</text>
 
-  <div class="tile" id="logTile">
-    <div class="title">판단 기록<small>노드가 보낸 이유</small></div>
-    <ul id="log"></ul>
-  </div>
+  <!-- 침대 -->
+  <rect x="1000" y="610" width="560" height="90" rx="8" fill="#2c2c2e"/>
+  <rect x="1008" y="586" width="544" height="32" rx="12" fill="#3a3a3c"/>
+  <rect x="1460" y="566" width="82" height="28" rx="12" fill="#48484a"/>
+
+  <!-- 판단 노드 + Matter 링크 -->
+  <path id="m-link" d="M 970 404 V 386 Q 970 380 976 380 H 1050 Q 1056 380 1056 374 V 182 Q 1056 176 1062 176 H 1070" fill="none" stroke="#2997ff" stroke-opacity=".55" stroke-width="2.5" stroke-dasharray="5 9"/>
+  <circle id="m-packet" r="8" fill="#2997ff" opacity="0"><animateMotion id="m-anim" dur="0.7s" begin="indefinite" fill="remove"><mpath href="#m-link"/></animateMotion></circle>
+  <g transform="translate(900 404)">
+    <rect x="0" y="0" width="140" height="84" rx="12" fill="#0f3d2e"/>
+    <text x="70" y="32" text-anchor="middle" fill="#fff" font-size="18" font-weight="600">판단 노드</text>
+    <circle id="led0" cx="28" cy="60" r="7" fill="#30d158"/>
+    <circle id="led1" cx="56" cy="60" r="7" fill="#1c3329"/>
+    <circle id="led2" cx="84" cy="60" r="7" fill="#1c3329"/>
+    <circle id="led3" cx="112" cy="60" r="7" fill="#1c3329"/>
+    <text x="70" y="108" text-anchor="middle" class="lbl" font-size="14">nRF54LM20 DK</text>
+  </g>
+  <path d="M 1040 446 L 1070 446" stroke="#3a3a3c" stroke-width="2"/>
+
+  <!-- Matter → SmartThings 허브 -->
+  <rect class="panel" x="1070" y="36" width="510" height="280" rx="20"/>
+  <rect x="1094" y="56" width="40" height="40" rx="10" fill="#3a3a3c"/>
+  <circle cx="1114" cy="76" r="6" fill="#8e8e93"/>
+  <text x="1148" y="84" fill="#fff" font-size="21" font-weight="600">SmartThings 허브 · Matter</text>
+  <g font-size="18">
+    <text x="1094" y="132" class="cap" font-size="18">EP1  선풍기 On/Off</text><text id="ep1" x="1556" y="132" text-anchor="end" fill="#fff" font-weight="600">-</text>
+    <text x="1094" y="164" class="cap" font-size="18">EP5  가습기 On/Off</text><text id="ep5" x="1556" y="164" text-anchor="end" fill="#fff" font-weight="600">-</text>
+    <text x="1094" y="196" class="cap" font-size="18">EP2  벽 표면 습도</text><text id="ep2" x="1556" y="196" text-anchor="end" fill="#fff" font-weight="600">-</text>
+    <text x="1094" y="228" class="cap" font-size="18">EP3  실내 습도</text><text id="ep3" x="1556" y="228" text-anchor="end" fill="#fff" font-weight="600">-</text>
+    <text x="1094" y="260" class="cap" font-size="18">EP4  벽 표면 온도</text><text id="ep4" x="1556" y="260" text-anchor="end" fill="#fff" font-weight="600">-</text>
+  </g>
+  <text id="m-stat" x="1094" y="298" fill="#8e8e93" font-size="17">보드를 연결하면 허브 보고가 표시됩니다</text>
+
+  <!-- 노드의 판단 -->
+  <rect class="panel" x="1070" y="334" width="510" height="216" rx="20"/>
+  <text x="1094" y="370" class="cap" font-size="18">노드의 판단</text>
+  <text id="d0" x="1094" y="410" fill="#fff" font-size="21" font-weight="600"></text>
+  <text id="d1" x="1094" y="452" class="cap" font-size="18"></text>
+  <text id="d2" x="1094" y="490" class="cap" font-size="18"></text>
+  <text id="d3" x="1094" y="528" class="cap" font-size="18"></text>
+
+  <!-- 밤새 기록 -->
+  <rect class="panel" x="20" y="722" width="1560" height="162" rx="20"/>
+  <text x="44" y="760" class="cap" font-size="17">누적 위험 시간 (표면 80% 이상)</text>
+  <text x="44" y="798" class="cap" font-size="18">우리 노드</text><text id="v-risk" x="330" y="800" text-anchor="end" fill="#fff" font-size="28" font-weight="600">0분</text>
+  <text x="44" y="836" class="cap" font-size="18">일반 가습기 60%</text><text id="v-crisk" x="330" y="838" text-anchor="end" fill="#ff453a" font-size="28" font-weight="600">0분</text>
+  <text x="44" y="870" class="cap" font-size="16">임계까지 예측</text><text id="v-eta" x="330" y="870" text-anchor="end" fill="#fff" font-size="17" font-weight="600">--</text>
+  <g class="lbl" font-size="13" text-anchor="end">
+    <text x="372" y="746">120%</text><text x="372" y="794">80%</text><text x="372" y="842">40%</text>
+  </g>
+  <g stroke="#3a3a3c" stroke-width="1"><line x1="380" y1="742" x2="1556" y2="742"/><line x1="380" y1="838" x2="1556" y2="838"/><line x1="380" y1="862" x2="1556" y2="862"/></g>
+  <g id="c-fan" fill="#2997ff" fill-opacity=".14"></g>
+  <line x1="380" y1="790" x2="1556" y2="790" stroke="#ff453a" stroke-width="1.5" stroke-dasharray="3 4"/>
+  <line x1="380" y1="796" x2="1556" y2="796" stroke="#ff9f0a" stroke-width="1.5" stroke-dasharray="3 4"/>
+  <text x="1556" y="785" text-anchor="end" fill="#ff453a" font-size="13">임계 80</text>
+  <text x="1556" y="811" text-anchor="end" fill="#ff9f0a" font-size="13">정지선 75</text>
+  <polyline id="c-cmp" fill="none" stroke="#ff453a" stroke-width="2.5" stroke-dasharray="7 6" points=""/>
+  <polyline id="c-rh" fill="none" stroke="#8e8e93" stroke-width="2.5" points=""/>
+  <polyline id="c-srh" fill="none" stroke="#2997ff" stroke-width="4" stroke-linejoin="round" points=""/>
+  <g class="lbl" font-size="13" text-anchor="middle">
+    <text x="380" y="878">22:00</text><text x="615" y="878">00:00</text><text x="850" y="878">02:00</text><text x="1086" y="878">04:00</text><text x="1321" y="878">06:00</text><text x="1540" y="878">08:00</text>
+  </g>
+  <text id="cl-cmp" font-size="14" fill="#ff453a"></text>
+  <text id="cl-srh" font-size="14" font-weight="600" fill="#2997ff"></text>
+  <text id="cl-rh" font-size="14" fill="#aeaeb2"></text>
+</svg>
 </main>
 <script>
 const $ = id => document.getElementById(id);
@@ -276,7 +274,7 @@ $('conn').onclick = async () => {
     send('shell echo off');
     doReset();
     readLoop();
-  } catch (e) { addLog('포트 연결 실패: ' + e.message, 'app'); }
+  } catch (e) { addLog(e.name === 'NotFoundError' ? '포트 선택을 취소했습니다' : '포트 연결 실패: ' + e.message, 'app'); }
 };
 async function readLoop() {
   const r = port.readable.pipeThrough(new TextDecoderStream()).getReader();
@@ -302,7 +300,7 @@ function handle(l) {
   const j = l.indexOf('EVT ');
   if (j >= 0) { onEvt(l.slice(j)); return; }
   /* Matter: 노드 → 허브 상태 보고와 허브의 수신 확인 */
-  if (l.includes('(IM:ReportData)')) { matter.reports++; matter.txMs = devMs(l); renderMatter(); }
+  if (l.includes('(IM:ReportData)')) { matter.reports++; matter.txMs = devMs(l); renderMatter(); sendPacket(); }
   else if (l.includes('Received status response, status is 0x00')) {
     matter.acks++; const ms = devMs(l);
     if (ms !== null && matter.txMs !== null && ms >= matter.txMs) matter.latency = ms - matter.txMs;
@@ -310,83 +308,112 @@ function handle(l) {
   } else if (/\(IM:(InvokeCommandRequest|WriteRequest)\)/.test(l)) { matter.cmds++; renderMatter(); }
 }
 function renderMatter(flash) {
-  const s = $('mstat');
-  const at = matter.lastAck ? matter.lastAck.toLocaleTimeString('ko-KR', { hour12: false }) : '-';
-  s.innerHTML = `허브 보고 <b>${matter.reports}</b>회 · 수신 확인 <b>${matter.acks}</b>회<br>마지막 확인 ${at}` +
-    (matter.latency !== null ? ` · 응답 <b>${matter.latency}ms</b>` : '');
-  $('mcmd').textContent = matter.cmds ? `허브에서 받은 명령 ${matter.cmds}회 (앱 조작)` : '';
-  if (flash) { s.classList.add('flash'); setTimeout(() => s.classList.remove('flash'), 600); }
+  const s = $('m-stat');
+  let txt = `허브 보고 ${matter.reports}회 · 수신 확인 ${matter.acks}회`;
+  if (matter.latency !== null) txt += ` · 응답 ${matter.latency}ms`;
+  if (matter.cmds) txt += ` · 앱 명령 ${matter.cmds}회`;
+  s.textContent = txt;
+  s.setAttribute('fill', '#2997ff');
+  if (flash) { s.setAttribute('fill', '#ffffff'); setTimeout(() => s.setAttribute('fill', '#2997ff'), 600); }
+}
+function sendPacket() {
+  const p = $('m-packet');
+  p.setAttribute('opacity', 1);
+  $('m-anim').beginElement();
+  setTimeout(() => p.setAttribute('opacity', 0), 700);
 }
 
-/* ---------- 판단 기록: 노드가 보낸 이유를 사람이 읽는 문장으로 ---------- */
+/* ---------- 노드의 판단: 노드가 보낸 이유를 짧은 문장으로 ---------- */
 const REASONS = [
-  ['band_by_fan', '선풍기로 넓힌 구간 안에서 가습 재개 (점막 방어 유지)', 'humid'],
-  ['srh>=75 humid_off', '벽 표면 75% 도달 → 가습 정지 (곰팡이 방어)', 'humid'],
-  ['srh>=75 fan_on', '벽 표면 75% → 선풍기로 벽 표면을 데움', 'fan'],
-  ['srh_nofan<70 fan_off', '선풍기 없이도 70% 아래 → 선풍기 정지', 'fan'],
-  ['ah<6.5 humid_on', '절대습도 6.5 g/㎥ 미만 → 가습 시작 (점막 방어)', 'humid'],
-  ['ah>=8 humid_off', '절대습도 8 g/㎥ 도달 → 가습 정지', 'humid'],
-  ['app_manual', '앱에서 직접 조작 → 30분 사용자 우선 (80% 넘으면 방어 우선)', 'app'],
+  ['band_by_fan', '선풍기로 넓힌 구간에서 가습 재개', 'humid'],
+  ['srh>=75 humid_off', '벽 표면 75% → 가습 정지', 'humid'],
+  ['srh>=75 fan_on', '벽 표면 75% → 선풍기로 벽 데움', 'fan'],
+  ['srh_nofan<70 fan_off', '선풍기 없이도 안전 → 선풍기 정지', 'fan'],
+  ['ah<6.5 humid_on', '절대습도 부족 → 가습 시작', 'humid'],
+  ['ah>=8 humid_off', '절대습도 충분 → 가습 정지', 'humid'],
+  ['app_manual', '앱 조작 → 30분 사용자 우선', 'app'],
 ];
+const decisions = [];
 function onEvt(e) {
   const t = parseFloat((e.match(/t=([\d.]+)/) || [])[1]);
   const when = Number.isFinite(t) ? clockText(t) : '';
   const g = e.match(/learn fan_gain=([\d.]+)/);
-  if (g) { addLog(`선풍기 효과 학습: 벽 표면 +${(+g[1]).toFixed(1)}℃`, 'fan', when); return; }
+  if (g) { addLog(`선풍기 효과 학습: 벽 +${(+g[1]).toFixed(1)}℃`, 'fan', when); return; }
   const why = (e.match(/why=(.*)$/) || [])[1] || '';
   if (why === 'reset' || why === 'boot') return;
   const r = REASONS.find(([k]) => why.includes(k));
   addLog(r ? r[1] : why, r ? r[2] : '', when);
 }
 function addLog(text, cls, when) {
-  const li = document.createElement('li');
-  if (cls) li.className = cls;
-  li.innerHTML = `<time>${when || ''}</time>`;
-  li.appendChild(document.createTextNode(text));
-  $('log').prepend(li);
+  decisions.unshift({ text: (when ? when + '   ' : '') + text });
+  decisions.length = Math.min(decisions.length, 4);
+  decisions.forEach((d, i) => { $('d' + i).textContent = d.text; });
+  for (let i = decisions.length; i < 4; i++) $('d' + i).textContent = '';
 }
 
-/* ---------- 화면 ---------- */
+/* ---------- 장면 ---------- */
 function clockText(m) {
   const x = 22 * 60 + Math.round(m);
   return String(Math.floor(x / 60) % 24).padStart(2, '0') + ':' + String(x % 60).padStart(2, '0');
 }
 const minText = m => m < 60 ? `${Math.round(m)}분` : `${Math.floor(m / 60)}시간 ${Math.round(m % 60)}분`;
 const surfColor = s => s >= 80 ? '#ff453a' : s >= 75 ? '#ff9f0a' : s >= 70 ? '#ffd60a' : s >= 60 ? '#64d2ff' : '#5e8fb3';
+const srhColor = s => s >= 80 ? '#ff453a' : s >= 75 ? '#ff9f0a' : '#2997ff';
+const BX = p => 384 + 634 * (Math.min(Math.max(p, 20), 70) - 20) / 50;
+const CX = m => 380 + 1176 * m / P.END, CY = p => 862 - (Math.min(Math.max(p, 20), 120) - 20) * 1.2;
+
+/* 그래프 선 끝에 이름표 (범례 대신) */
+function labelLines() {
+  const last = hist[hist.length - 1];
+  const items = [['cl-cmp', '일반 가습기', last && last.csrh], ['cl-srh', '벽 표면', last && last.srh], ['cl-rh', '실내', last && last.rh]];
+  if (!last) { items.forEach(([id]) => { $(id).textContent = ''; }); return; }
+  const x = Math.min(CX(last.t) + 8, 1470);
+  const ys = items.map(([, , v]) => CY(v) + 5).sort((a, b) => a - b);
+  items.sort((a, b) => CY(a[2]) - CY(b[2]));
+  let prev = -1e9;
+  items.forEach(([id, name], i) => {
+    const y = Math.max(ys[i], prev + 15);
+    prev = y;
+    const el = $(id); el.textContent = name; el.setAttribute('x', x); el.setAttribute('y', Math.min(Math.max(y, 752), 868));
+  });
+}
 
 function render(v) {
-  $('clock').textContent = clockText(room.t);
   const to = tOut(room.t);
+  $('clock').textContent = clockText(room.t);
   $('out').textContent = `바깥 ${to.toFixed(1)}℃`;
-  $('rh').textContent = v.rh.toFixed(0) + '%';
-  $('ah').textContent = `절대습도 ${v.ah.toFixed(1)} g/㎥ · 목표 6 이상`;
-  const s = $('srh');
-  s.textContent = v.srh >= 100 ? '결로' : v.srh.toFixed(0) + '%';
-  s.className = 'big' + (v.srh >= 80 ? ' danger' : v.srh >= 75 ? ' warn' : '');
-  for (const [id, on, name] of [['hum', v.humid, '가습기'], ['fan', v.fan, '선풍기']]) {
-    $(id).classList.toggle('on', !!on);
-    $(id).innerHTML = `<span>${name}</span><b>${on ? 'ON' : 'OFF'}</b>`;
-  }
-  $('eta').textContent = v.eta < 0 ? '추세 안정' : v.eta === 0 ? '선풍기 없으면 임계' : `약 ${minText(v.eta)}`;
-  $('gain').textContent = v.gain > 0 ? `벽 표면 +${v.gain.toFixed(1)}℃` : '아직 학습 전';
-  $('risk').textContent = minText(v.risk);
-  $('crisk').textContent = minText(cmp.risk);
+  $('v-out').textContent = `${to.toFixed(0)}℃`;
 
-  /* 방 그림 */
-  const svg = $('room');
-  svg.classList.toggle('fan-on', !!v.fan);
-  svg.classList.toggle('hum-on', !!v.humid);
-  $('r-out').textContent = `${to.toFixed(0)}℃`;
+  /* 같은 방, 다른 습도 */
+  $('v-srh').textContent = v.srh >= 100 ? '결로' : v.srh.toFixed(0) + '%';
+  $('v-srh').setAttribute('fill', srhColor(v.srh));
+  $('v-wall').textContent = `벽 표면 ${v.wt.toFixed(1)}℃ · 정지선 75 · 임계 80`;
+  $('v-rh').textContent = v.rh.toFixed(0) + '%';
+  $('v-ah').textContent = `절대습도 ${v.ah.toFixed(1)} g/㎥ · 목표 6 이상`;
   $('r-surf').setAttribute('fill', surfColor(v.srh));
   $('drops').setAttribute('opacity', v.srh >= 95 ? 1 : 0);
-  $('r-wall').textContent = `벽 표면 ${v.wt.toFixed(1)}℃`;
-  $('r-wsrh').textContent = v.srh >= 100 ? '결로' : `표면 습도 ${v.srh.toFixed(0)}%`;
-  $('r-wsrh').setAttribute('fill', v.srh >= 80 ? '#ff453a' : v.srh >= 75 ? '#ff9f0a' : '#2997ff');
-  $('r-room').textContent = `실내 ${P.T_IN}℃ · ${v.rh.toFixed(0)}%`;
-  $('r-fan').textContent = v.fan ? '선풍기 ON' : '선풍기 OFF';
-  $('r-fan').setAttribute('fill', v.fan ? '#2997ff' : '#8e8e93');
-  $('r-hum').textContent = v.humid ? '가습기 ON' : '가습기 OFF';
-  $('r-hum').setAttribute('fill', v.humid ? '#e5e5ea' : '#8e8e93');
+
+  /* 표 3 */
+  const ok = v.hi > v.lo;
+  $('b-label').textContent = ok ? `${v.lo.toFixed(0)}~${v.hi.toFixed(0)}%` : '구간 없음';
+  $('b-allowed').setAttribute('x', BX(v.lo));
+  $('b-allowed').setAttribute('width', ok ? Math.max(0, BX(v.hi) - BX(v.lo)) : 0);
+  const showNf = v.fan && v.hinf < v.hi;
+  $('b-nofan').setAttribute('opacity', showNf ? 1 : 0);
+  $('b-nofan').setAttribute('x', BX(v.lo));
+  $('b-nofan').setAttribute('width', Math.max(0, BX(v.hinf) - BX(v.lo)));
+  $('b-nofan-lbl').textContent = showNf ? `점선 = 선풍기 없으면 ~${v.hinf.toFixed(0)}%` : '';
+  $('b-marker').setAttribute('x', BX(v.rh) - 2);
+
+  /* 가전 */
+  const sc = $('scene');
+  sc.classList.toggle('fan-on', !!v.fan);
+  sc.classList.toggle('hum-on', !!v.humid);
+  $('l-fan').textContent = v.fan ? '선풍기 ON' : '선풍기 OFF';
+  $('l-fan').setAttribute('fill', v.fan ? '#2997ff' : '#8e8e93');
+  $('l-gain').textContent = v.gain > 0 ? `학습: 벽 표면 +${v.gain.toFixed(1)}℃` : '';
+  $('l-hum').textContent = v.humid ? '가습기 ON' : '가습기 OFF';
+  $('l-hum').setAttribute('fill', v.humid ? '#ffffff' : '#8e8e93');
   $('led1').setAttribute('fill', v.fan ? '#30d158' : '#1c3329');
   $('led2').setAttribute('fill', v.humid ? '#30d158' : '#1c3329');
   $('led3').setAttribute('fill', v.srh >= 80 ? '#30d158' : '#1c3329');
@@ -398,57 +425,19 @@ function render(v) {
   $('ep3').textContent = v.rh.toFixed(1) + '%';
   $('ep4').textContent = v.wt.toFixed(2) + '℃';
 
-  drawChart(); drawBand(v);
-}
-
-function setupCanvas(c) {
-  /* height 속성은 devicePixelRatio만큼 커진 값이 되므로 다시 읽지 않는다 */
-  const r = devicePixelRatio || 1, w = c.clientWidth;
-  const h = c.id === 'chart' ? Math.max(140, c.parentElement.clientHeight - 64) : +c.dataset.h;
-  c.width = Math.round(w * r); c.height = Math.round(h * r); c.style.height = h + 'px';
-  const g = c.getContext('2d'); g.setTransform(r, 0, 0, r, 0, 0);
-  return [g, w, h];
-}
-function drawChart() {
-  const [g, w, h] = setupCanvas($('chart'));
-  const L = 44, R = 24, T = 8, B = 24, X = m => L + (w - L - R) * m / P.END, Y = p => T + (h - T - B) * (1 - Math.min(p, 120) / 120);
-  g.clearRect(0, 0, w, h);
-  g.font = '13px Pretendard, sans-serif'; g.fillStyle = '#7a7a7a'; g.strokeStyle = '#f0f0f0'; g.lineWidth = 1;
-  for (const p of [0, 40, 80, 120]) { g.beginPath(); g.moveTo(L, Y(p)); g.lineTo(w - R, Y(p)); g.stroke(); g.fillText(p + '%', 6, Y(p) + 4); }
-  for (let m = 0; m <= P.END; m += 120) g.fillText(clockText(m), X(m) - 16, h - 6);
-  for (const [p, c, txt, dy] of [[75, '#bf4800', '정지선 75', 14], [80, '#e30000', '임계 80', -4]]) {
-    g.strokeStyle = c; g.setLineDash([2, 3]); g.beginPath(); g.moveTo(L, Y(p)); g.lineTo(w - R, Y(p)); g.stroke(); g.setLineDash([]);
-    g.fillStyle = c; g.fillText(txt, w - R - 62, Y(p) + dy);
-  }
+  /* 밤새 기록 */
+  $('v-risk').textContent = minText(v.risk);
+  $('v-crisk').textContent = minText(cmp.risk);
+  $('v-eta').textContent = v.eta < 0 ? '추세 안정' : v.eta === 0 ? '선풍기 없으면 임계' : `약 ${minText(v.eta)}`;
+  const pts = key => hist.map(p => `${CX(p.t).toFixed(1)},${CY(p[key]).toFixed(1)}`).join(' ');
+  $('c-rh').setAttribute('points', pts('rh'));
+  $('c-srh').setAttribute('points', pts('srh'));
+  $('c-cmp').setAttribute('points', pts('csrh'));
+  labelLines();
   const runs = []; let start = null;
   hist.forEach(p => { if (p.fan && start === null) start = p.t; if (!p.fan && start !== null) { runs.push([start, p.t]); start = null; } });
   if (start !== null) runs.push([start, room.t]);
-  g.fillStyle = 'rgba(0, 102, 204, 0.07)';
-  runs.forEach(([a, b]) => g.fillRect(X(a), T, X(b) - X(a), h - T - B));
-  const line = (key, color, dash, width) => {
-    g.strokeStyle = color; g.lineWidth = width; g.setLineDash(dash); g.beginPath();
-    hist.forEach((p, i) => (i ? g.lineTo : g.moveTo).call(g, X(p.t), Y(p[key])));
-    g.stroke(); g.setLineDash([]);
-  };
-  line('csrh', '#e30000', [6, 5], 2);
-  line('rh', '#8e8e93', [], 2);
-  line('srh', '#0066cc', [], 3);
-}
-function drawBand(v) {
-  const [g, w, h] = setupCanvas($('band'));
-  const lo = 20, hiS = 70, X = p => 10 + (w - 20) * (Math.min(Math.max(p, lo), hiS) - lo) / (hiS - lo), y = 40, bh = 34;
-  g.clearRect(0, 0, w, h);
-  g.fillStyle = '#f5f5f7'; g.fillRect(X(lo), y, X(hiS) - X(lo), bh);
-  if (v.fan && v.hinf < v.hi) {
-    g.strokeStyle = '#7a7a7a'; g.setLineDash([4, 3]); g.strokeRect(X(v.lo), y - 6, Math.max(0, X(v.hinf) - X(v.lo)), bh + 12); g.setLineDash([]);
-  }
-  if (v.hi > v.lo) { g.fillStyle = 'rgba(0, 102, 204, 0.22)'; g.fillRect(X(v.lo), y, X(v.hi) - X(v.lo), bh); }
-  g.fillStyle = '#1d1d1f'; g.fillRect(X(v.rh) - 1.5, y - 10, 3, bh + 20);
-  g.font = '600 16px Pretendard, sans-serif'; g.fillStyle = '#1d1d1f';
-  g.fillText(v.hi > v.lo ? `허용 ${v.lo.toFixed(0)}~${v.hi.toFixed(0)}%` : '허용 구간 없음', X(v.lo), 26);
-  g.font = '14px Pretendard, sans-serif';
-  if (v.fan) { g.fillStyle = '#7a7a7a'; g.fillText(`선풍기 없으면 ~${v.hinf.toFixed(0)}%`, X(v.lo), y + bh + 26); }
-  g.fillStyle = '#7a7a7a'; g.fillText('20%', X(20), h - 2); g.fillText('70%', X(70) - 28, h - 2);
+  $('c-fan').innerHTML = runs.map(([a, b]) => `<rect x="${CX(a).toFixed(1)}" y="742" width="${(CX(b) - CX(a)).toFixed(1)}" height="120"/>`).join('');
 }
 
 /* ---------- 0.5초마다: 가상 침실 → 센서값 → 노드 판단 → 다시 가상 침실 ---------- */
@@ -474,7 +463,8 @@ function tick() {
 function doReset() {
   running = false; $('play').textContent = '▶ 한파의 밤';
   resetRoom(); resetLocal();
-  lastVal = null; $('log').textContent = '';
+  lastVal = null;
+  decisions.length = 0; for (let i = 0; i < 4; i++) $('d' + i).textContent = '';
   send('dreset');
 }
 $('play').onclick = () => {
@@ -485,7 +475,6 @@ $('play').onclick = () => {
 $('reset').onclick = doReset;
 resetRoom(); resetLocal();
 setInterval(tick, 500);
-window.addEventListener('resize', () => { if (lastVal || hist.length) tick(); });
 </script>
 </body>
 </html>
