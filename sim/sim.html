@@ -12,7 +12,9 @@
 html, body { height: 100%; }
 body { margin: 0; background: var(--black); color: var(--ink-on-dark); font-family: "Pretendard", system-ui, sans-serif; letter-spacing: -0.01em; display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
 header { display: flex; align-items: center; gap: 12px; padding: 10px 24px; background: var(--black); border-bottom: 1px solid #1c1c1e; flex-wrap: wrap; }
-header h1 { font-size: 20px; font-weight: 600; margin: 0 16px 0 0; }
+header h1 { font-size: 20px; font-weight: 600; margin: 0; line-height: 1.2; }
+.brand { margin-right: 16px; }
+.tag { font-size: 13px; color: var(--muted); }
 .clock { font-size: 32px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
 .out { color: var(--muted); font-size: 17px; margin-right: auto; font-variant-numeric: tabular-nums; }
 .pill { font: inherit; font-size: 15px; padding: 8px 20px; border-radius: 9999px; cursor: pointer; border: 1px solid var(--sky); background: transparent; color: var(--sky); transition: transform .12s; }
@@ -46,7 +48,7 @@ main { flex: 1; min-height: 0; position: relative; overflow: hidden; }
 </head>
 <body>
 <header>
-  <h1>침실 환경 면역 방어 노드</h1>
+  <div class="brand"><h1>침실 환경 면역 방어 노드</h1><div class="tag">벽 표면 습도를 계산해 스스로 개입하는 Matter 디바이스</div></div>
   <span class="clock" id="clock">22:00</span>
   <span class="out" id="out">바깥 2.0℃</span>
   <span id="mode">보드 미연결 · 화면 안 계산</span>
@@ -137,6 +139,7 @@ main { flex: 1; min-height: 0; position: relative; overflow: hidden; }
     <circle id="led2" cx="84" cy="60" r="7" fill="#1c3329"/>
     <circle id="led3" cx="112" cy="60" r="7" fill="#1c3329"/>
     <text x="70" y="108" text-anchor="middle" class="lbl" font-size="14">nRF54LM20 DK</text>
+    <text x="70" y="128" text-anchor="middle" class="lbl" font-size="14">온디바이스 판단</text>
   </g>
   <path d="M 1040 446 L 1070 446" stroke="#3a3a3c" stroke-width="2"/>
 
@@ -144,13 +147,14 @@ main { flex: 1; min-height: 0; position: relative; overflow: hidden; }
   <rect class="panel" x="1070" y="36" width="510" height="280" rx="20"/>
   <rect x="1094" y="56" width="40" height="40" rx="10" fill="#3a3a3c"/>
   <circle cx="1114" cy="76" r="6" fill="#8e8e93"/>
-  <text x="1148" y="84" fill="#fff" font-size="21" font-weight="600">SmartThings 허브 · Matter</text>
+  <text x="1148" y="78" fill="#fff" font-size="21" font-weight="600">SmartThings 허브 · Matter</text>
+  <text x="1148" y="100" class="lbl" font-size="14">nRF Connect SDK v3.4.1 · Matter over Thread · 표준 클러스터</text>
   <g font-size="18">
-    <text x="1094" y="132" class="cap" font-size="18">EP1  선풍기 On/Off</text><text id="ep1" x="1556" y="132" text-anchor="end" fill="#fff" font-weight="600">-</text>
-    <text x="1094" y="164" class="cap" font-size="18">EP5  가습기 On/Off</text><text id="ep5" x="1556" y="164" text-anchor="end" fill="#fff" font-weight="600">-</text>
-    <text x="1094" y="196" class="cap" font-size="18">EP2  벽 표면 습도</text><text id="ep2" x="1556" y="196" text-anchor="end" fill="#fff" font-weight="600">-</text>
-    <text x="1094" y="228" class="cap" font-size="18">EP3  실내 습도</text><text id="ep3" x="1556" y="228" text-anchor="end" fill="#fff" font-weight="600">-</text>
-    <text x="1094" y="260" class="cap" font-size="18">EP4  벽 표면 온도</text><text id="ep4" x="1556" y="260" text-anchor="end" fill="#fff" font-weight="600">-</text>
+    <text x="1094" y="132" class="cap" font-size="18">EP1  선풍기 · On/Off</text><text id="ep1" x="1556" y="132" text-anchor="end" fill="#fff" font-weight="600">-</text>
+    <text x="1094" y="164" class="cap" font-size="18">EP5  가습기 · On/Off</text><text id="ep5" x="1556" y="164" text-anchor="end" fill="#fff" font-weight="600">-</text>
+    <text x="1094" y="196" class="cap" font-size="18">EP2  벽 표면 습도 · 습도 측정</text><text id="ep2" x="1556" y="196" text-anchor="end" fill="#fff" font-weight="600">-</text>
+    <text x="1094" y="228" class="cap" font-size="18">EP3  실내 습도 · 습도 측정</text><text id="ep3" x="1556" y="228" text-anchor="end" fill="#fff" font-weight="600">-</text>
+    <text x="1094" y="260" class="cap" font-size="18">EP4  벽 표면 온도 · 온도 측정</text><text id="ep4" x="1556" y="260" text-anchor="end" fill="#fff" font-weight="600">-</text>
   </g>
   <text id="m-stat" x="1094" y="298" fill="#8e8e93" font-size="17">보드를 연결하면 허브 보고가 표시됩니다</text>
 
@@ -171,17 +175,17 @@ main { flex: 1; min-height: 0; position: relative; overflow: hidden; }
   <g class="lbl" font-size="13" text-anchor="end">
     <text x="372" y="746">120%</text><text x="372" y="794">80%</text><text x="372" y="842">40%</text>
   </g>
-  <g stroke="#3a3a3c" stroke-width="1"><line x1="380" y1="742" x2="1556" y2="742"/><line x1="380" y1="838" x2="1556" y2="838"/><line x1="380" y1="862" x2="1556" y2="862"/></g>
+  <g stroke="#3a3a3c" stroke-width="1"><line x1="380" y1="742" x2="1480" y2="742"/><line x1="380" y1="838" x2="1480" y2="838"/><line x1="380" y1="862" x2="1480" y2="862"/></g>
   <g id="c-fan" fill="#2997ff" fill-opacity=".14"></g>
-  <line x1="380" y1="790" x2="1556" y2="790" stroke="#ff453a" stroke-width="1.5" stroke-dasharray="3 4"/>
-  <line x1="380" y1="796" x2="1556" y2="796" stroke="#ff9f0a" stroke-width="1.5" stroke-dasharray="3 4"/>
-  <text x="1556" y="785" text-anchor="end" fill="#ff453a" font-size="13">임계 80</text>
-  <text x="1556" y="811" text-anchor="end" fill="#ff9f0a" font-size="13">정지선 75</text>
+  <line x1="380" y1="790" x2="1480" y2="790" stroke="#ff453a" stroke-width="1.5" stroke-dasharray="3 4"/>
+  <line x1="380" y1="796" x2="1480" y2="796" stroke="#ff9f0a" stroke-width="1.5" stroke-dasharray="3 4"/>
+  <text x="388" y="785" fill="#ff453a" font-size="13">임계 80</text>
+  <text x="388" y="811" fill="#ff9f0a" font-size="13">정지선 75</text>
   <polyline id="c-cmp" fill="none" stroke="#ff453a" stroke-width="2.5" stroke-dasharray="7 6" points=""/>
   <polyline id="c-rh" fill="none" stroke="#8e8e93" stroke-width="2.5" points=""/>
   <polyline id="c-srh" fill="none" stroke="#2997ff" stroke-width="4" stroke-linejoin="round" points=""/>
   <g class="lbl" font-size="13" text-anchor="middle">
-    <text x="380" y="878">22:00</text><text x="615" y="878">00:00</text><text x="850" y="878">02:00</text><text x="1086" y="878">04:00</text><text x="1321" y="878">06:00</text><text x="1540" y="878">08:00</text>
+    <text x="380" y="878">22:00</text><text x="600" y="878">00:00</text><text x="820" y="878">02:00</text><text x="1040" y="878">04:00</text><text x="1260" y="878">06:00</text><text x="1480" y="878">08:00</text>
   </g>
   <text id="cl-cmp" font-size="14" fill="#ff453a"></text>
   <text id="cl-srh" font-size="14" font-weight="600" fill="#2997ff"></text>
@@ -360,14 +364,14 @@ const minText = m => m < 60 ? `${Math.round(m)}분` : `${Math.floor(m / 60)}시�
 const surfColor = s => s >= 80 ? '#ff453a' : s >= 75 ? '#ff9f0a' : s >= 70 ? '#ffd60a' : s >= 60 ? '#64d2ff' : '#5e8fb3';
 const srhColor = s => s >= 80 ? '#ff453a' : s >= 75 ? '#ff9f0a' : '#2997ff';
 const BX = p => 384 + 634 * (Math.min(Math.max(p, 20), 70) - 20) / 50;
-const CX = m => 380 + 1176 * m / P.END, CY = p => 862 - (Math.min(Math.max(p, 20), 120) - 20) * 1.2;
+const CX = m => 380 + 1100 * m / P.END, CY = p => 862 - (Math.min(Math.max(p, 20), 120) - 20) * 1.2;
 
 /* 그래프 선 끝에 이름표 (범례 대신) */
 function labelLines() {
   const last = hist[hist.length - 1];
   const items = [['cl-cmp', '일반 가습기', last && last.csrh], ['cl-srh', '벽 표면', last && last.srh], ['cl-rh', '실내', last && last.rh]];
   if (!last) { items.forEach(([id]) => { $(id).textContent = ''; }); return; }
-  const x = Math.min(CX(last.t) + 8, 1470);
+  const x = CX(last.t) + 8;
   const ys = items.map(([, , v]) => CY(v) + 5).sort((a, b) => a - b);
   items.sort((a, b) => CY(a[2]) - CY(b[2]));
   let prev = -1e9;
