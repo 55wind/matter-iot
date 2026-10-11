@@ -26,7 +26,7 @@ void MatterPostAttributeChangeCallback(const chip::app::ConcreteAttributePath &a
 
 	if (clusterId == OnOff::Id && attributeId == OnOff::Attributes::OnOff::Id) {
 		/* EP1 선풍기, EP5 가습기 릴레이 딸깍. 판단부의 EVT 줄과 섞이지 않게 로그는 남기지 않는다 */
-		NodeRelaySet(attributePath.mEndpointId, *value);
+		NodeOnOffChanged(attributePath.mEndpointId, *value);
 		if (attributePath.mEndpointId != kFanEndpointId) {
 			return;
 		}

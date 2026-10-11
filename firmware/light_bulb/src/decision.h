@@ -14,6 +14,7 @@ struct node_status {
 extern struct inputs g_in;
 const struct node_status *decision_status(void);
 void decision_start(void);
+void decision_manual(bool humid, bool fan);    /* 앱에서 바꾼 상태 반영 */
 void outputs_apply(bool humid, bool fan);  /* 릴레이·LED·Matter 반영 (node_outputs.cpp) */
 void inputs_changed(void);                 /* 센서·판단값을 Matter 속성으로 (node_outputs.cpp) */
 #ifdef __cplusplus

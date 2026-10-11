@@ -51,6 +51,18 @@ void NodeOutputsInit()
 	decision_start();
 }
 
+void NodeOnOffChanged(chip::EndpointId endpoint, bool on)
+{
+	NodeRelaySet(endpoint, on);
+
+	/* 판단부가 내린 값과 다르면 앱(또는 DK 버튼)에서 바꾼 것. 부팅 직후 상태 복원은 무시한다 */
+	bool *commanded = endpoint == kFanEndpointId ? &sFan : endpoint == kHumidifierEndpointId ? &sHumid : nullptr;
+	if (commanded && *commanded != on && k_uptime_get() > 5000) {
+		*commanded = on;
+		decision_manual(sHumid, sFan);
+	}
+}
+
 void NodeRelaySet(chip::EndpointId endpoint, bool on)
 {
 	if (endpoint == kFanEndpointId) {

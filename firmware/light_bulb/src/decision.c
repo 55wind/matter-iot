@@ -14,6 +14,7 @@
 #define AH_STOP    8.0f  /* 이 위로 오르면 가습 정지 */
 #define LEARN_MIN  3.0f  /* 선풍기를 켠 뒤 효과를 재는 시간 (분) */
 #define LEARN_MAX 15.0f  /* 효과가 안 보일 때 기다리는 최대 시간 (분) */
+#define MANUAL_MIN 30.0f /* 앱에서 직접 조작하면 이 시간 동안 존중 (분), 단 80% 이상이면 방어 우선 */
 
 struct inputs g_in = { 21.0f, 45.0f, 21.0f, 50.0f };
 static struct node_status st;
@@ -21,6 +22,8 @@ static float sim_t = -1.0f;   /* 가상 시각(분). sim 명령에 없으면 업
 static float hold_min = 1.0f; /* 최소 유지 시간 60초 */
 static float prev_t = -1.0f, last_change_t, fan_on_t, wall_before_fan, prev_wall_nf, slope;
 static bool measuring;
+static float manual_until = -1.0f;
+K_MUTEX_DEFINE(dlock);
 
 static float psat(float t) { return 6.112f * expf(17.62f * t / (243.12f + t)); }
 static float srh_at(float wall) { return g_in.room_rh * psat(g_in.room_t) / psat(wall); }
@@ -63,6 +66,7 @@ static void set_outputs(bool h, bool f, const char *why)
 
 static void step(void)
 {
+	k_mutex_lock(&dlock, K_FOREVER);
 	float t = now_min();
 	float dt = (prev_t < 0.0f || t < prev_t) ? 0.0f : t - prev_t;
 
@@ -105,11 +109,16 @@ static void step(void)
 
 	bool h = st.humid, f = st.fan;
 	bool held = (t - last_change_t) >= hold_min;
+	if (manual_until >= 0.0f && (t >= manual_until || st.srh >= ISO_TH)) {
+		manual_until = -1.0f;
+	}
 	/* 선풍기를 끄고 가습 목표(8 g/m3)까지 올려도 표면이 70% 아래인가 */
 	float rh_eval = fmaxf(g_in.room_rh, rh_for_ah(AH_STOP));
 	float srh_target_nf = rh_eval * psat(g_in.room_t) / psat(wall_nf);
 
-	if (h && st.srh >= ON_TH) {
+	if (t < manual_until && st.srh < ISO_TH) {
+		/* 사용자가 앱에서 정한 상태를 유지한다 */
+	} else if (h && st.srh >= ON_TH) {
 		/* A 곰팡이 방어: 표면 75%에서 가습 정지 */
 		set_outputs(false, f, "srh>=75 humid_off");
 	} else if (!f && st.srh >= ON_TH) {
@@ -133,11 +142,14 @@ static void step(void)
 	     (double)t, (double)g_in.room_rh, (double)g_in.wall_t, (double)st.srh, (double)st.ah, st.humid, st.fan,
 	     (double)st.band_lo, (double)st.band_hi, (double)st.band_hi_nf, (double)st.eta_min, (double)st.risk_min,
 	     (double)st.fan_gain);
+	k_mutex_unlock(&dlock);
 	inputs_changed();
 }
 
 static void decision_reset(void)
 {
+	k_mutex_lock(&dlock, K_FOREVER);
+	manual_until = -1.0f;
 	/* 가상 시각 0분부터 다시 시작한다 (업타임과 섞이면 유지시간 판정이 틀어진다) */
 	sim_t = 0.0f;
 	prev_t = -1.0f;
@@ -147,6 +159,28 @@ static void decision_reset(void)
 	st.fan_gain = 0.0f;
 	set_outputs(false, false, "reset");
 	last_change_t = -hold_min;
+	k_mutex_unlock(&dlock);
+}
+
+/* 앱(다른 Matter 컨트롤러)이나 DK 버튼으로 바뀐 상태를 판단부에 반영한다 */
+void decision_manual(bool humid, bool fan)
+{
+	k_mutex_lock(&dlock, K_FOREVER);
+	float t = now_min();
+	if (fan && !st.fan) {
+		fan_on_t = t;
+		wall_before_fan = g_in.wall_t;
+		measuring = true;
+	} else if (!fan) {
+		measuring = false;
+	}
+	st.humid = humid;
+	st.fan = fan;
+	last_change_t = t;
+	manual_until = t + MANUAL_MIN;
+	emit("EVT t=%.1f humid=%d fan=%d srh=%.1f ah=%.2f why=app_manual\n", (double)t, humid, fan, (double)st.srh,
+	     (double)st.ah);
+	k_mutex_unlock(&dlock);
 }
 
 static void decision_thread(void *a, void *b, void *c)
