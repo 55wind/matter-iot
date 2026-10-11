@@ -2082,6 +2082,36 @@ cluster GroupKeyManagement = 63 {
   fabric command access(invoke: administer) KeySetReadAllIndices(): KeySetReadAllIndicesResponse = 4;
 }
 
+/** Attributes and commands for configuring the measurement of temperature, and reporting temperature measurements. */
+cluster TemperatureMeasurement = 1026 {
+  revision 4;
+
+  readonly attribute nullable temperature measuredValue = 0;
+  readonly attribute nullable temperature minMeasuredValue = 1;
+  readonly attribute nullable temperature maxMeasuredValue = 2;
+  readonly attribute optional int16u tolerance = 3;
+  readonly attribute command_id generatedCommandList[] = 65528;
+  readonly attribute command_id acceptedCommandList[] = 65529;
+  readonly attribute attrib_id attributeList[] = 65531;
+  readonly attribute bitmap32 featureMap = 65532;
+  readonly attribute int16u clusterRevision = 65533;
+}
+
+/** Attributes and commands for configuring the measurement of relative humidity, and reporting relative humidity measurements. */
+cluster RelativeHumidityMeasurement = 1029 {
+  revision 3;
+
+  readonly attribute nullable int16u measuredValue = 0;
+  readonly attribute nullable int16u minMeasuredValue = 1;
+  readonly attribute nullable int16u maxMeasuredValue = 2;
+  readonly attribute optional int16u tolerance = 3;
+  readonly attribute command_id generatedCommandList[] = 65528;
+  readonly attribute command_id acceptedCommandList[] = 65529;
+  readonly attribute attrib_id attributeList[] = 65531;
+  readonly attribute bitmap32 featureMap = 65532;
+  readonly attribute int16u clusterRevision = 65533;
+}
+
 endpoint 0 {
   device type ma_rootdevice = 22, version 4;
   device type ma_otarequestor = 18, version 1;
@@ -2484,6 +2514,142 @@ endpoint 1 {
     handle command MoveWithOnOff;
     handle command StepWithOnOff;
     handle command StopWithOnOff;
+  }
+
+  server cluster Descriptor {
+    callback attribute deviceTypeList;
+    callback attribute serverList;
+    callback attribute clientList;
+    callback attribute partsList;
+    callback attribute generatedCommandList;
+    callback attribute acceptedCommandList;
+    callback attribute attributeList;
+    callback attribute featureMap;
+    callback attribute clusterRevision;
+  }
+}
+endpoint 2 {
+  device type ma_humiditysensor = 775, version 1;
+
+
+  server cluster Descriptor {
+    callback attribute deviceTypeList;
+    callback attribute serverList;
+    callback attribute clientList;
+    callback attribute partsList;
+    callback attribute generatedCommandList;
+    callback attribute acceptedCommandList;
+    callback attribute attributeList;
+    callback attribute featureMap;
+    callback attribute clusterRevision;
+  }
+
+  server cluster RelativeHumidityMeasurement {
+    ram      attribute measuredValue default = 0x11d0;
+    ram      attribute minMeasuredValue default = 0x1;
+    ram      attribute maxMeasuredValue default = 0x2710;
+    ram      attribute tolerance default = 8;
+    callback attribute generatedCommandList;
+    callback attribute acceptedCommandList;
+    callback attribute attributeList;
+    ram      attribute featureMap default = 0;
+    ram      attribute clusterRevision default = 1;
+  }
+}
+endpoint 3 {
+  device type ma_humiditysensor = 775, version 1;
+
+
+  server cluster Descriptor {
+    callback attribute deviceTypeList;
+    callback attribute serverList;
+    callback attribute clientList;
+    callback attribute partsList;
+    callback attribute generatedCommandList;
+    callback attribute acceptedCommandList;
+    callback attribute attributeList;
+    callback attribute featureMap;
+    callback attribute clusterRevision;
+  }
+
+  server cluster RelativeHumidityMeasurement {
+    ram      attribute measuredValue default = 0x11d0;
+    ram      attribute minMeasuredValue default = 0x1;
+    ram      attribute maxMeasuredValue default = 0x2710;
+    ram      attribute tolerance default = 8;
+    callback attribute generatedCommandList;
+    callback attribute acceptedCommandList;
+    callback attribute attributeList;
+    ram      attribute featureMap default = 0;
+    ram      attribute clusterRevision default = 1;
+  }
+}
+endpoint 4 {
+  device type ma_tempsensor = 770, version 1;
+
+
+  server cluster Descriptor {
+    callback attribute deviceTypeList;
+    callback attribute serverList;
+    callback attribute clientList;
+    callback attribute partsList;
+    callback attribute generatedCommandList;
+    callback attribute acceptedCommandList;
+    callback attribute attributeList;
+    callback attribute featureMap;
+    callback attribute clusterRevision;
+  }
+
+  server cluster TemperatureMeasurement {
+    ram      attribute measuredValue default = 2350;
+    ram      attribute minMeasuredValue default = -27315;
+    ram      attribute maxMeasuredValue default = 32767;
+    callback attribute generatedCommandList;
+    callback attribute acceptedCommandList;
+    callback attribute attributeList;
+    ram      attribute featureMap default = 0;
+    ram      attribute clusterRevision default = 1;
+  }
+}
+endpoint 5 {
+  device type ma_onoffpluginunit = 266, version 1;
+
+
+  server cluster Groups {
+    ram      attribute nameSupport default = 0;
+    callback attribute generatedCommandList;
+    callback attribute acceptedCommandList;
+    callback attribute attributeList;
+    ram      attribute featureMap default = 0;
+    ram      attribute clusterRevision default = 3;
+
+    handle command AddGroup;
+    handle command AddGroupResponse;
+    handle command ViewGroup;
+    handle command ViewGroupResponse;
+    handle command GetGroupMembership;
+    handle command GetGroupMembershipResponse;
+    handle command RemoveGroup;
+    handle command RemoveGroupResponse;
+    handle command RemoveAllGroups;
+    handle command AddGroupIfIdentifying;
+  }
+
+  server cluster OnOff {
+    persist  attribute onOff default = 0;
+    ram      attribute globalSceneControl default = 1;
+    ram      attribute onTime default = 0;
+    ram      attribute offWaitTime default = 0;
+    persist  attribute startUpOnOff default = 0;
+    callback attribute generatedCommandList;
+    callback attribute acceptedCommandList;
+    callback attribute attributeList;
+    ram      attribute featureMap default = 0;
+    ram      attribute clusterRevision default = 5;
+
+    handle command Off;
+    handle command On;
+    handle command Toggle;
   }
 
   server cluster Descriptor {

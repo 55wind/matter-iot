@@ -1,53 +1,174 @@
-<!doctype html><html lang="ko"><meta charset="utf-8"><title>침실 노드 시뮬레이터</title>
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>침실 노드 시연</title>
 <style>
-body{font-family:sans-serif;margin:24px;background:#fafafa}
-button{font-size:18px;padding:8px 14px;margin-right:6px}
-.row{display:flex;gap:56px;margin:24px 0}
-.big{font-size:72px;font-weight:700}
-.warn{color:#c62828}
-label{display:block;font-size:20px;margin:10px 0}
-input[type=range]{width:420px}
-#log{height:150px;overflow:auto;background:#111;color:#7CFC00;font:15px monospace;padding:8px}
+:root {
+  --bg: #f6f6f3; --panel: #ffffff; --ink: #1b1b1b; --muted: #6b6b6b; --line: #deded8;
+  --room: #6b7280; --surface: #0f6d8c; --warn: #c27c0e; --danger: #b42318; --ok: #1f7a4d;
+  --fan: #2557c7; --humid: #0e8a7e; --compare: #b42318;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; }
+header { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--panel); flex-wrap: wrap; }
+header h1 { font-size: 20px; margin: 0 16px 0 0; }
+.clock { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.out { color: var(--muted); font-size: 18px; margin-right: auto; }
+button, select { font: inherit; font-size: 16px; padding: 8px 14px; border: 1px solid #bdbdb5; background: #fff; border-radius: 6px; cursor: pointer; }
+button.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+#conn.on { background: var(--ok); color: #fff; border-color: var(--ok); }
+main { padding: 16px 20px; display: grid; gap: 16px; grid-template-columns: 1fr 1fr 1fr; }
+.tile { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 18px; }
+.label { font-size: 17px; color: var(--muted); }
+.big { font-size: 76px; font-weight: 700; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.sub { font-size: 16px; color: var(--muted); margin-top: 4px; }
+#srh.warn { color: var(--warn); } #srh.danger { color: var(--danger); }
+.act { display: flex; flex-direction: column; gap: 10px; }
+.chip { display: flex; justify-content: space-between; align-items: center; font-size: 26px; padding: 8px 12px; border-radius: 6px; background: #f0f0ec; }
+.chip b { font-size: 28px; }
+.chip.on.humid { background: #d9f0ec; color: var(--humid); }
+.chip.on.fan { background: #dfe7fb; color: var(--fan); }
+.wide { grid-column: span 2; }
+canvas { width: 100%; display: block; }
+.band-title { font-size: 17px; margin-bottom: 8px; }
+.kv { display: flex; justify-content: space-between; font-size: 18px; padding: 6px 0; border-top: 1px solid var(--line); }
+.kv b { font-variant-numeric: tabular-nums; }
+#log { grid-column: span 3; height: 110px; overflow: auto; background: #151515; color: #b8f2c4; font: 14px/1.5 Consolas, monospace; padding: 8px 12px; border-radius: 8px; margin: 0; }
+#mode { font-size: 14px; padding: 4px 8px; border-radius: 4px; background: #fdecea; color: var(--danger); }
+#mode.board { background: #e6f4ec; color: var(--ok); }
+@media (max-width: 900px) { main { grid-template-columns: 1fr; } .wide, #log { grid-column: span 1; } .big { font-size: 56px; } }
 </style>
-<button id="conn">포트 연결</button>
-<button id="scn">벽 냉각 시나리오 ▶</button>
-<button id="reset">쾌적한 방</button>
-<button id="hold">대기 10초</button>
-<div class="row">
-  <div>실내 습도<div class="big" id="rrh">45%</div></div>
-  <div>벽 표면 습도<div class="big" id="srh">--</div></div>
-  <div style="font-size:28px">가습기 <b id="hum">-</b><br>선풍기 <b id="fan">-</b></div>
-</div>
-<label>실내 온도 <input id="rt" type="range" min="15" max="30" step="0.1" value="24"> <span></span>℃</label>
-<label>실내 습도 <input id="rh" type="range" min="20" max="80" step="1" value="45"> <span></span>%</label>
-<label>벽 표면 온도 <input id="wt" type="range" min="0" max="25" step="0.1" value="24"> <span></span>℃</label>
-<label>침구 습도 <input id="bh" type="range" min="30" max="90" step="1" value="50"> <span></span>%</label>
-<pre id="log"></pre>
+</head>
+<body>
+<header>
+  <h1>침실 환경 면역 방어 노드</h1>
+  <span class="clock" id="clock">22:00</span>
+  <span class="out" id="out">바깥 2.0℃</span>
+  <span id="mode">보드 미연결 · 화면 안 계산</span>
+  <button id="conn">포트 연결</button>
+  <button id="play" class="primary">▶ 한파의 밤</button>
+  <button id="reset">⟲ 처음으로</button>
+  <select id="speed" title="배속">
+    <option value="5">1초 = 5분</option>
+    <option value="10" selected>1초 = 10분</option>
+    <option value="20">1초 = 20분</option>
+  </select>
+</header>
+<main>
+  <div class="tile">
+    <div class="label">실내 습도 (방 습도계)</div>
+    <div class="big" id="rh">--</div>
+    <div class="sub" id="ah">절대습도 -- g/㎥ · 목표 6 이상</div>
+  </div>
+  <div class="tile">
+    <div class="label">벽 표면 습도 (노드 계산)</div>
+    <div class="big" id="srh">--</div>
+    <div class="sub" id="wall">벽 표면 --℃ · 정지선 75% · 임계 80%</div>
+  </div>
+  <div class="tile act">
+    <div class="chip humid" id="hum"><span>가습기</span><b>-</b></div>
+    <div class="chip fan" id="fan"><span>선풍기</span><b>-</b></div>
+    <div class="sub" id="gain">선풍기 효과: 아직 학습 전</div>
+  </div>
+  <div class="tile wide">
+    <div class="band-title">밤새 습도 변화 · <span style="color:var(--room)">■ 실내</span> <span style="color:var(--surface)">■ 벽 표면(우리 노드)</span> <span style="color:var(--compare)">┄ 일반 가습기(60% 목표)였다면</span></div>
+    <canvas id="chart" height="300"></canvas>
+  </div>
+  <div class="tile">
+    <div class="band-title">지금 벽 온도에서 허용되는 실내 습도 (표 3)</div>
+    <canvas id="band" height="120"></canvas>
+    <div class="kv"><span>임계(80%)까지 예측</span><b id="eta">--</b></div>
+    <div class="kv"><span>누적 위험 시간 · 우리 노드</span><b id="risk">0분</b></div>
+    <div class="kv"><span>누적 위험 시간 · 일반 가습기</span><b id="crisk" style="color:var(--compare)">0분</b></div>
+  </div>
+  <pre id="log"></pre>
+</main>
 <script>
 const $ = id => document.getElementById(id);
-const ids = ['rt','rh','wt','bh'];
-let port, writer, last = 0, timer, holdLong = false, scnTimer;
 
-function send(line){ if (writer) writer.write(new TextEncoder().encode(line + '\r')); }
-
-function push(){
-  ids.forEach(i => $(i).nextElementSibling.textContent = $(i).value);
-  $('rrh').textContent = $('rh').value + '%';
-  const now = Date.now();
-  if (now - last < 200) { clearTimeout(timer); timer = setTimeout(push, 200); return; }
-  last = now;
-  send(`sim ${$('rt').value} ${$('rh').value} ${$('wt').value} ${$('bh').value}`);
+/* ---------- 가상 침실 (센서와 가전의 물리적 효과를 대신함) ---------- */
+const P = { T_IN: 21, F0: 0.316, G_FAN: 1 / 3, TAU_WALL: 60, TAU_FAN: 0.5,
+            AH_OUT: 2.5, TAU_VENT: 150, S_OCC: 0.015, G_HUM: 0.06, END: 600 };
+const OUT_KEYS = [[0, 2], [150, -8], [300, -14], [420, -12], [510, 0], [600, 10]];
+const psat = t => 6.112 * Math.exp(17.62 * t / (243.12 + t));
+const rhFromAh = (ah, t) => ah * (273.15 + t) / 216.7 / psat(t) * 100;
+const ahFromRh = (rh, t) => 216.7 * rh / 100 * psat(t) / (273.15 + t);
+function tOut(m) {
+  for (let i = 1; i < OUT_KEYS.length; i++) {
+    const [a, ta] = OUT_KEYS[i - 1], [b, tb] = OUT_KEYS[i];
+    if (m <= b) return ta + (tb - ta) * (m - a) / (b - a);
+  }
+  return OUT_KEYS[OUT_KEYS.length - 1][1];
 }
-ids.forEach(i => $(i).oninput = push);
+let room, cmp, hist, running = false;
+function resetRoom() {
+  const ws0 = P.T_IN - P.F0 * (P.T_IN - tOut(0));
+  room = { t: 0, ws0, phi: 0, ah: ahFromRh(35, P.T_IN) };
+  cmp = { ws0, ah: room.ah, h: false, risk: 0 };
+  hist = [];
+}
+const wallT = () => room.ws0 + room.phi * P.G_FAN * (P.T_IN - room.ws0);
+function advance(minutes, humid, fan) {
+  const n = 10, dt = minutes / n;
+  for (let i = 0; i < n; i++) {
+    const teq = P.T_IN - P.F0 * (P.T_IN - tOut(room.t));
+    room.ws0 += (teq - room.ws0) / P.TAU_WALL * dt;
+    room.phi = Math.min(1, Math.max(0, room.phi + ((fan ? 1 : 0) - room.phi) / P.TAU_FAN * dt));
+    room.ah += (P.G_HUM * humid + P.S_OCC - (room.ah - P.AH_OUT) / P.TAU_VENT) * dt;
+    /* 비교용: 실내 60%만 맞추는 일반 가습기, 선풍기 없음 */
+    cmp.ws0 += (teq - cmp.ws0) / P.TAU_WALL * dt;
+    cmp.h = rhFromAh(cmp.ah, P.T_IN) < 60;
+    cmp.ah += (P.G_HUM * cmp.h + P.S_OCC - (cmp.ah - P.AH_OUT) / P.TAU_VENT) * dt;
+    if (cmpSrh() >= 80) cmp.risk += dt;
+    room.t += dt;
+  }
+}
+const cmpSrh = () => rhFromAh(cmp.ah, P.T_IN) * psat(P.T_IN) / psat(cmp.ws0);
 
+/* ---------- 보드 미연결일 때만 쓰는 같은 판단 로직 (decision.c와 동일) ---------- */
+const local = { h: false, f: false, meas: false, gain: 0, last: 0, fanOnT: 0, wallBefore: 0, risk: 0, prev: null, prevWnf: 0, slope: 0 };
+function localStep(t, rt, rh, wt) {
+  const L = local, dt = L.prev === null || t < L.prev ? 0 : t - L.prev;
+  if (L.f && L.meas && t - L.fanOnT >= 3 && (wt - L.wallBefore >= 0.5 || t - L.fanOnT >= 15)) { L.gain = Math.max(0, wt - L.wallBefore); L.meas = false; logLine(`EVT t=${t.toFixed(1)} learn fan_gain=${L.gain.toFixed(2)}`); }
+  const wnf = L.f ? wt - L.gain : wt;
+  const srh = rh * psat(rt) / psat(wt), srhNf = rh * psat(rt) / psat(wnf), ah = ahFromRh(rh, rt);
+  if (dt > 0 && !(L.f && L.meas)) L.slope = 0.8 * L.slope + 0.2 * (wnf - L.prevWnf) / dt;
+  L.prevWnf = wnf; L.prev = t;
+  const lg = Math.log(rh / 80 * psat(rt) / 6.112), crit = 243.12 * lg / (17.62 - lg);
+  const eta = wnf <= crit ? 0 : L.slope < -0.001 ? (wnf - crit) / -L.slope : -1;
+  if (srh >= 80) L.risk += dt;
+  const held = t - L.last >= 1;
+  const srhTgtNf = Math.max(rh, rhFromAh(8, rt)) * psat(rt) / psat(wnf);
+  const set = (h, f, why) => { L.h = h; L.f = f; L.last = t; logLine(`EVT t=${t.toFixed(1)} humid=${+h} fan=${+f} srh=${srh.toFixed(1)} why=${why}`); };
+  if (L.h && srh >= 75) set(false, L.f, 'srh>=75 humid_off');
+  else if (!L.f && srh >= 75) { L.fanOnT = t; L.wallBefore = wt; L.meas = true; set(L.h, true, 'srh>=75 fan_on'); }
+  else if (L.f && !L.meas && held && srhTgtNf < 70) set(L.h, false, 'srh_nofan<70 fan_off');
+  else if (!L.h && held && ah < 6.5 && srh < 70) set(true, L.f, 'ah<6.5 humid_on');
+  else if (L.h && ah >= 8) set(false, L.f, 'ah>=8 humid_off');
+  const hi = w => 80 * psat(w) / psat(rt);
+  return { t, rh, wt, srh, srhnf: srhNf, ah, humid: +L.h, fan: +L.f, lo: rhFromAh(6, rt), hi: hi(wt), hinf: hi(wnf), eta, risk: L.risk, gain: L.gain };
+}
+
+/* ---------- 보드 연결 (Web Serial) ---------- */
+let port, writer, dk = null, lastVal = null;
+const VAL_KEYS = ['t', 'rh', 'wt', 'srh', 'ah', 'humid', 'fan', 'lo', 'hi', 'hinf', 'eta', 'risk', 'gain'];
+function send(line) { if (writer) writer.write(new TextEncoder().encode(line + '\r')); }
 $('conn').onclick = async () => {
-  port = await navigator.serial.requestPort();
-  await port.open({ baudRate: 115200 });
-  writer = port.writable.getWriter();
-  readLoop(); push();
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+    writer = port.writable.getWriter();
+    dk = true;
+    $('conn').classList.add('on'); $('conn').textContent = '보드 연결됨';
+    $('mode').textContent = '보드가 판단 중'; $('mode').classList.add('board');
+    send('shell echo off');
+    send('dreset');
+    readLoop();
+  } catch (e) { logLine('포트 연결 실패: ' + e.message); }
 };
-
-async function readLoop(){
+async function readLoop() {
   const r = port.readable.pipeThrough(new TextDecoderStream()).getReader();
   let buf = '';
   while (true) {
@@ -58,38 +179,134 @@ async function readLoop(){
     while ((k = buf.indexOf('\n')) >= 0) { handle(buf.slice(0, k).trim()); buf = buf.slice(k + 1); }
   }
 }
-
-function handle(l){
-  const m = l.match(/VAL srh=([\d.]+) humid=(\d) fan=(\d)/);
-  if (m) {
-    const s = parseFloat(m[1]);
-    $('srh').textContent = s >= 100 ? '결로' : s.toFixed(0) + '%';
-    $('srh').className = 'big' + (s >= 75 ? ' warn' : '');
-    $('hum').textContent = m[2] === '1' ? 'ON' : 'OFF';
-    $('fan').textContent = m[3] === '1' ? 'ON' : 'OFF';
+function handle(l) {
+  const i = l.indexOf('VAL ');
+  if (i >= 0) {
+    const v = {};
+    l.slice(i + 4).split(' ').forEach(p => { const [a, b] = p.split('='); if (b !== undefined) v[a] = parseFloat(b); });
+    /* 로그와 섞여 잘린 줄은 버린다 */
+    if (VAL_KEYS.every(k => Number.isFinite(v[k]))) lastVal = v;
     return;
   }
-  if (l.includes('EVT')) { $('log').textContent += l + '\n'; $('log').scrollTop = 1e9; }
+  const j = l.indexOf('EVT ');
+  if (j >= 0) logLine(l.slice(j));
 }
 
-$('scn').onclick = () => {
-  clearInterval(scnTimer);
-  let t = parseFloat($('wt').value);
-  scnTimer = setInterval(() => {
-    t -= 0.4; $('wt').value = t.toFixed(1); push();
-    if (t <= 14.8) clearInterval(scnTimer);
-  }, 500);
-};
+/* ---------- 화면 ---------- */
+function logLine(s) {
+  const t = room ? clockText(room.t) : '';
+  $('log').textContent += `[${t}] ${s}\n`;
+  $('log').scrollTop = 1e9;
+}
+function clockText(m) {
+  const x = 22 * 60 + Math.round(m);
+  return String(Math.floor(x / 60) % 24).padStart(2, '0') + ':' + String(x % 60).padStart(2, '0');
+}
+const minText = m => m < 60 ? `${Math.round(m)}분` : `${Math.floor(m / 60)}시간 ${Math.round(m % 60)}분`;
 
+function render(v) {
+  $('clock').textContent = clockText(room.t);
+  $('out').textContent = `바깥 ${tOut(room.t).toFixed(1)}℃`;
+  $('rh').textContent = v.rh.toFixed(0) + '%';
+  $('ah').textContent = `절대습도 ${v.ah.toFixed(1)} g/㎥ · 목표 6 이상`;
+  const s = $('srh');
+  s.textContent = v.srh >= 100 ? '결로' : v.srh.toFixed(0) + '%';
+  s.className = 'big' + (v.srh >= 80 ? ' danger' : v.srh >= 75 ? ' warn' : '');
+  $('wall').textContent = `벽 표면 ${v.wt.toFixed(1)}℃ · 정지선 75% · 임계 80%`;
+  for (const [id, on, name] of [['hum', v.humid, '가습기'], ['fan', v.fan, '선풍기']]) {
+    $(id).classList.toggle('on', !!on);
+    $(id).innerHTML = `<span>${name}</span><b>${on ? 'ON' : 'OFF'}</b>`;
+  }
+  $('gain').textContent = v.gain > 0 ? `학습한 선풍기 효과: 벽 표면 +${v.gain.toFixed(1)}℃` : '선풍기 효과: 아직 학습 전';
+  $('eta').textContent = v.eta < 0 ? '추세 안정' : v.eta === 0 ? '선풍기 없으면 임계' : `약 ${minText(v.eta)}`;
+  $('risk').textContent = minText(v.risk);
+  $('crisk').textContent = minText(cmp.risk);
+  drawChart(); drawBand(v);
+}
+
+function setupCanvas(c) {
+  if (!c.dataset.h) c.dataset.h = c.getAttribute('height');
+  const r = devicePixelRatio || 1, w = c.clientWidth, h = +c.dataset.h;
+  c.width = w * r; c.height = h * r; c.style.height = h + 'px';
+  const g = c.getContext('2d'); g.setTransform(r, 0, 0, r, 0, 0);
+  return [g, w, h];
+}
+function drawChart() {
+  const [g, w, h] = setupCanvas($('chart'));
+  const L = 44, R = 24, T = 10, B = 28, X = m => L + (w - L - R) * m / P.END, Y = p => T + (h - T - B) * (1 - Math.min(p, 120) / 120);
+  g.clearRect(0, 0, w, h);
+  g.font = '13px sans-serif'; g.fillStyle = '#6b6b6b'; g.strokeStyle = '#e6e6e0'; g.lineWidth = 1;
+  for (const p of [0, 20, 40, 60, 80, 100, 120]) { g.beginPath(); g.moveTo(L, Y(p)); g.lineTo(w - R, Y(p)); g.stroke(); g.fillText(p + '%', 6, Y(p) + 4); }
+  for (let m = 0; m <= P.END; m += 120) g.fillText(clockText(m), X(m) - 16, h - 8);
+  for (const [p, c, txt, dy] of [[75, '#c27c0e', '정지선 75', 14], [80, '#b42318', '임계 80', -4]]) {
+    g.strokeStyle = c; g.setLineDash([2, 3]); g.beginPath(); g.moveTo(L, Y(p)); g.lineTo(w - R, Y(p)); g.stroke(); g.setLineDash([]);
+    g.fillStyle = c; g.fillText(txt, w - R - 60, Y(p) + dy);
+  }
+  const fanRuns = []; let start = null;
+  hist.forEach(p => { if (p.fan && start === null) start = p.t; if (!p.fan && start !== null) { fanRuns.push([start, p.t]); start = null; } });
+  if (start !== null) fanRuns.push([start, room.t]);
+  g.fillStyle = 'rgba(37, 87, 199, 0.08)';
+  fanRuns.forEach(([a, b]) => g.fillRect(X(a), T, X(b) - X(a), h - T - B));
+  const line = (key, color, dash, width) => {
+    g.strokeStyle = color; g.lineWidth = width; g.setLineDash(dash); g.beginPath();
+    hist.forEach((p, i) => (i ? g.lineTo : g.moveTo).call(g, X(p.t), Y(p[key])));
+    g.stroke(); g.setLineDash([]);
+  };
+  line('csrh', '#b42318', [6, 4], 2);
+  line('rh', '#6b7280', [], 2);
+  line('srh', '#0f6d8c', [], 3);
+}
+function drawBand(v) {
+  const [g, w, h] = setupCanvas($('band'));
+  const lo = 20, hiS = 70, X = p => 10 + (w - 20) * (Math.min(Math.max(p, lo), hiS) - lo) / (hiS - lo), y = 34, bh = 30;
+  g.clearRect(0, 0, w, h);
+  g.fillStyle = '#efefea'; g.fillRect(X(lo), y, X(hiS) - X(lo), bh);
+  if (v.fan && v.hinf < v.hi) {
+    g.strokeStyle = '#6b6b6b'; g.setLineDash([4, 3]); g.strokeRect(X(v.lo), y - 6, Math.max(0, X(v.hinf) - X(v.lo)), bh + 12); g.setLineDash([]);
+  }
+  if (v.hi > v.lo) { g.fillStyle = v.fan ? 'rgba(37, 87, 199, 0.35)' : 'rgba(31, 122, 77, 0.35)'; g.fillRect(X(v.lo), y, X(v.hi) - X(v.lo), bh); }
+  g.fillStyle = '#1b1b1b'; g.fillRect(X(v.rh) - 2, y - 10, 4, bh + 20);
+  g.font = '14px sans-serif'; g.fillStyle = '#1b1b1b';
+  g.fillText(v.hi > v.lo ? `허용 ${v.lo.toFixed(0)}~${v.hi.toFixed(0)}%` : '허용 구간 없음', X(v.lo), 22);
+  if (v.fan) { g.fillStyle = '#6b6b6b'; g.fillText(`선풍기 없으면 ~${v.hinf.toFixed(0)}%`, X(v.lo), y + bh + 26); }
+  g.fillStyle = '#6b6b6b'; g.fillText('20%', X(20) - 2, h - 2); g.fillText('70%', X(70) - 28, h - 2);
+}
+
+/* ---------- 0.5초마다 한 번: 가상 침실 → 센서값 → 판단 → 다시 가상 침실 ---------- */
+function tick() {
+  const v = dk ? lastVal : null;
+  const humid = v ? v.humid : local.h, fan = v ? v.fan : local.f;
+  if (running) {
+    advance(parseFloat($('speed').value) * 0.5, humid, fan);
+    if (room.t >= P.END) { running = false; $('play').textContent = '▶ 한파의 밤'; }
+  }
+  const rh = rhFromAh(room.ah, P.T_IN), wt = wallT();
+  let shown;
+  if (dk) {
+    send(`sim ${P.T_IN.toFixed(1)} ${rh.toFixed(1)} ${wt.toFixed(2)} 50 ${room.t.toFixed(1)}`);
+    if (!lastVal) return;
+    shown = lastVal;
+  } else {
+    shown = localStep(room.t, P.T_IN, rh, wt);
+  }
+  if (running || !hist.length) hist.push({ t: room.t, rh, srh: shown.srh, csrh: cmpSrh(), fan: shown.fan });
+  render(shown);
+}
+
+$('play').onclick = () => {
+  if (room.t >= P.END) { $('reset').onclick(); }
+  running = !running;
+  $('play').textContent = running ? '❚❚ 멈춤' : '▶ 한파의 밤';
+};
 $('reset').onclick = () => {
-  clearInterval(scnTimer);
-  [['rt',24],['rh',45],['wt',24],['bh',50]].forEach(([i,v]) => $(i).value = v);
-  push();
+  running = false; $('play').textContent = '▶ 한파의 밤';
+  resetRoom(); Object.assign(local, { h: false, f: false, meas: false, gain: 0, last: 0, risk: 0, prev: null, prevWnf: 0, slope: 0 });
+  lastVal = null; $('log').textContent = '';
+  send('dreset');
 };
-
-$('hold').onclick = () => {
-  holdLong = !holdLong;
-  send(holdLong ? 'hold 60' : 'hold 10');
-  $('hold').textContent = holdLong ? '대기 60초' : '대기 10초';
-};
-</script></html>
+resetRoom();
+setInterval(tick, 500);
+window.addEventListener('resize', () => { if (lastVal || hist.length) tick(); });
+</script>
+</body>
+</html>

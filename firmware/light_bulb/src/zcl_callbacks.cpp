@@ -7,6 +7,7 @@
 #include <lib/support/logging/CHIPLogging.h>
 
 #include "app_task.h"
+#include "node_outputs.h"
 
 #include <app-common/zap-generated/attributes/Accessors.h>
 #include <app-common/zap-generated/ids/Attributes.h>
@@ -24,7 +25,11 @@ void MatterPostAttributeChangeCallback(const chip::app::ConcreteAttributePath &a
 	AttributeId attributeId = attributePath.mAttributeId;
 
 	if (clusterId == OnOff::Id && attributeId == OnOff::Attributes::OnOff::Id) {
-		ChipLogProgress(Zcl, "Cluster OnOff: attribute OnOff set to %" PRIu8 "", *value);
+		/* EP1 선풍기, EP5 가습기 릴레이 딸깍. 판단부의 EVT 줄과 섞이지 않게 로그는 남기지 않는다 */
+		NodeRelaySet(attributePath.mEndpointId, *value);
+		if (attributePath.mEndpointId != kFanEndpointId) {
+			return;
+		}
 
 #if defined(CONFIG_PWM)
 		AppTask::Instance().GetPWMDevice().InitiateAction(*value ? Nrf::PWMDevice::ON_ACTION :
@@ -66,6 +71,11 @@ void emberAfOnOffClusterInitCallback(EndpointId endpoint)
 {
 	Protocols::InteractionModel::Status status;
 	bool storedValue;
+
+	/* 가습기(EP5)는 판단부가 부팅 때 상태를 정한다 */
+	if (endpoint != kFanEndpointId) {
+		return;
+	}
 
 	/* Read storedValue on/off value */
 	status = Attributes::OnOff::Get(endpoint, &storedValue);

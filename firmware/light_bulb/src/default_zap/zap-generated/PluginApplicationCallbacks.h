@@ -37,23 +37,27 @@ void MatterWiFiNetworkDiagnosticsPluginServerInitCallback();
 void MatterAdministratorCommissioningPluginServerInitCallback();
 void MatterOperationalCredentialsPluginServerInitCallback();
 void MatterGroupKeyManagementPluginServerInitCallback();
+void MatterTemperatureMeasurementPluginServerInitCallback();
+void MatterRelativeHumidityMeasurementPluginServerInitCallback();
 
-#define MATTER_PLUGINS_INIT                                                                                            \
-	MatterIdentifyPluginServerInitCallback();                                                                      \
-	MatterGroupsPluginServerInitCallback();                                                                        \
-	MatterOnOffPluginServerInitCallback();                                                                         \
-	MatterLevelControlPluginServerInitCallback();                                                                  \
-	MatterDescriptorPluginServerInitCallback();                                                                    \
-	MatterAccessControlPluginServerInitCallback();                                                                 \
-	MatterBasicInformationPluginServerInitCallback();                                                              \
-	MatterOtaSoftwareUpdateRequestorPluginServerInitCallback();                                                    \
-	MatterGeneralCommissioningPluginServerInitCallback();                                                          \
-	MatterNetworkCommissioningPluginServerInitCallback();                                                          \
-	MatterDiagnosticLogsPluginServerInitCallback();                                                                \
-	MatterGeneralDiagnosticsPluginServerInitCallback();                                                            \
-	MatterSoftwareDiagnosticsPluginServerInitCallback();                                                           \
-	MatterThreadNetworkDiagnosticsPluginServerInitCallback();                                                      \
-	MatterWiFiNetworkDiagnosticsPluginServerInitCallback();                                                        \
-	MatterAdministratorCommissioningPluginServerInitCallback();                                                    \
-	MatterOperationalCredentialsPluginServerInitCallback();                                                        \
-	MatterGroupKeyManagementPluginServerInitCallback();
+#define MATTER_PLUGINS_INIT                                                    \
+  MatterIdentifyPluginServerInitCallback();                                    \
+  MatterGroupsPluginServerInitCallback();                                      \
+  MatterOnOffPluginServerInitCallback();                                       \
+  MatterLevelControlPluginServerInitCallback();                                \
+  MatterDescriptorPluginServerInitCallback();                                  \
+  MatterAccessControlPluginServerInitCallback();                               \
+  MatterBasicInformationPluginServerInitCallback();                            \
+  MatterOtaSoftwareUpdateRequestorPluginServerInitCallback();                  \
+  MatterGeneralCommissioningPluginServerInitCallback();                        \
+  MatterNetworkCommissioningPluginServerInitCallback();                        \
+  MatterDiagnosticLogsPluginServerInitCallback();                              \
+  MatterGeneralDiagnosticsPluginServerInitCallback();                          \
+  MatterSoftwareDiagnosticsPluginServerInitCallback();                         \
+  MatterThreadNetworkDiagnosticsPluginServerInitCallback();                    \
+  MatterWiFiNetworkDiagnosticsPluginServerInitCallback();                      \
+  MatterAdministratorCommissioningPluginServerInitCallback();                  \
+  MatterOperationalCredentialsPluginServerInitCallback();                      \
+  MatterGroupKeyManagementPluginServerInitCallback();                          \
+  MatterTemperatureMeasurementPluginServerInitCallback();                      \
+  MatterRelativeHumidityMeasurementPluginServerInitCallback();

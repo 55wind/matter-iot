@@ -5,6 +5,7 @@
  */
 
 #include "app_task.h"
+#include "node_outputs.h"
 
 #include "app/matter_init.h"
 #include "app/task_executor.h"
@@ -97,25 +98,11 @@ void AppTask::ButtonEventHandler(Nrf::ButtonState state, Nrf::ButtonMask hasChan
 #if defined(CONFIG_PWM)
 void AppTask::ActionInitiated(Nrf::PWMDevice::Action_t action, int32_t actor)
 {
-	if (action == Nrf::PWMDevice::ON_ACTION) {
-		LOG_INF("Turn On Action has been initiated");
-	} else if (action == Nrf::PWMDevice::OFF_ACTION) {
-		LOG_INF("Turn Off Action has been initiated");
-	} else if (action == Nrf::PWMDevice::LEVEL_ACTION) {
-		LOG_INF("Level Action has been initiated");
-	}
+	/* 판단부의 EVT/VAL 줄과 섞이지 않도록 로그를 남기지 않는다 */
 }
 
 void AppTask::ActionCompleted(Nrf::PWMDevice::Action_t action, int32_t actor)
 {
-	if (action == Nrf::PWMDevice::ON_ACTION) {
-		LOG_INF("Turn On Action has been completed");
-	} else if (action == Nrf::PWMDevice::OFF_ACTION) {
-		LOG_INF("Turn Off Action has been completed");
-	} else if (action == Nrf::PWMDevice::LEVEL_ACTION) {
-		LOG_INF("Level Action has been completed");
-	}
-
 	if (actor == static_cast<int32_t>(LightingActor::Button)) {
 		Instance().UpdateClusterState();
 	}
@@ -198,7 +185,11 @@ CHIP_ERROR AppTask::Init()
 
 	ReturnErrorOnFailure(sIdentifyCluster.Init());
 
-	return Nrf::Matter::StartServer();
+	ReturnErrorOnFailure(Nrf::Matter::StartServer());
+
+	/* 침실 노드 판단부 시작 */
+	NodeOutputsInit();
+	return CHIP_NO_ERROR;
 }
 
 CHIP_ERROR AppTask::StartApp()

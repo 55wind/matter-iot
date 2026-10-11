@@ -33,6 +33,8 @@ target_sources(app PRIVATE
   src/app_task.cpp
   src/main.cpp
   src/zcl_callbacks.cpp
+  src/decision.c
+  src/node_outputs.cpp
   ${CHIP_ROOT}/src/app/persistence/DeferredAttributePersistenceProvider.cpp
 )
 

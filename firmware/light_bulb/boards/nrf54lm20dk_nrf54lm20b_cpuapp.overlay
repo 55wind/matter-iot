@@ -57,3 +57,21 @@
 &wdt31 {
 	status = "okay";
 };
+
+/* 침실 노드: 릴레이 IN1 = 선풍기(P1.20), IN2 = 가습기(P1.21). LOW에서 켜지는 릴레이 */
+/ {
+	aliases {
+		relay-fan = &relay_fan;
+		relay-humid = &relay_humid;
+	};
+
+	relays {
+		compatible = "gpio-leds";
+		relay_fan: relay_fan {
+			gpios = <&gpio1 20 GPIO_ACTIVE_LOW>;
+		};
+		relay_humid: relay_humid {
+			gpios = <&gpio1 21 GPIO_ACTIVE_LOW>;
+		};
+	};
+};
