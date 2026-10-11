@@ -2,6 +2,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/shell/shell.h>
 #include <math.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include "decision.h"
 
@@ -38,13 +39,25 @@ static float now_min(void) { return sim_t >= 0.0f ? sim_t : k_uptime_get() / 600
 
 const struct node_status *decision_status(void) { return &st; }
 
+/* Matter 로그가 줄 중간에 끼어들지 않도록 한 줄을 통째로 출력한다 (minimal 로깅은 스레드마다 UART에 바로 씀) */
+static void emit(const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	k_sched_lock();
+	vprintk(fmt, ap);
+	k_sched_unlock();
+	va_end(ap);
+}
+
 static void set_outputs(bool h, bool f, const char *why)
 {
 	st.humid = h;
 	st.fan = f;
 	last_change_t = now_min();
 	outputs_apply(h, f);
-	printk("EVT t=%.1f humid=%d fan=%d srh=%.1f ah=%.2f why=%s\n", (double)now_min(), h, f, (double)st.srh,
+	emit("EVT t=%.1f humid=%d fan=%d srh=%.1f ah=%.2f why=%s\n", (double)now_min(), h, f, (double)st.srh,
 	       (double)st.ah, why);
 }
 
@@ -60,7 +73,7 @@ static void step(void)
 		if (g >= 0.5f || t - fan_on_t >= LEARN_MAX) {
 			st.fan_gain = g > 0.0f ? g : 0.0f;
 			measuring = false;
-			printk("EVT t=%.1f learn fan_gain=%.2f\n", (double)t, (double)st.fan_gain);
+			emit("EVT t=%.1f learn fan_gain=%.2f\n", (double)t, (double)st.fan_gain);
 		}
 	}
 
@@ -115,24 +128,25 @@ static void step(void)
 		set_outputs(false, f, "ah>=8 humid_off");
 	}
 
-	printk("VAL t=%.1f rt=%.1f rh=%.1f wt=%.2f srh=%.1f srhnf=%.1f ah=%.2f humid=%d fan=%d lo=%.1f hi=%.1f "
-	       "hinf=%.1f crit=%.2f eta=%.0f risk=%.1f gain=%.2f\n",
-	       (double)t, (double)g_in.room_t, (double)g_in.room_rh, (double)g_in.wall_t, (double)st.srh,
-	       (double)st.srh_nf, (double)st.ah, st.humid, st.fan, (double)st.band_lo, (double)st.band_hi,
-	       (double)st.band_hi_nf, (double)st.crit_wall, (double)st.eta_min, (double)st.risk_min,
-	       (double)st.fan_gain);
+	emit("VAL t=%.1f rh=%.1f wt=%.2f srh=%.1f ah=%.2f humid=%d fan=%d lo=%.1f hi=%.1f hinf=%.1f eta=%.0f "
+	     "risk=%.1f gain=%.2f\n",
+	     (double)t, (double)g_in.room_rh, (double)g_in.wall_t, (double)st.srh, (double)st.ah, st.humid, st.fan,
+	     (double)st.band_lo, (double)st.band_hi, (double)st.band_hi_nf, (double)st.eta_min, (double)st.risk_min,
+	     (double)st.fan_gain);
 	inputs_changed();
 }
 
 static void decision_reset(void)
 {
-	sim_t = -1.0f;
+	/* 가상 시각 0분부터 다시 시작한다 (업타임과 섞이면 유지시간 판정이 틀어진다) */
+	sim_t = 0.0f;
 	prev_t = -1.0f;
 	slope = 0.0f;
 	measuring = false;
 	st.risk_min = 0.0f;
 	st.fan_gain = 0.0f;
 	set_outputs(false, false, "reset");
+	last_change_t = -hold_min;
 }
 
 static void decision_thread(void *a, void *b, void *c)
