@@ -1,0 +1,14 @@
+# 발표자료 생성
+
+`build.js`(pptxgenjs)로 `발표자료_침실노드.pptx`를 만들고, `render.ps1`(PowerPoint COM)로 PDF와 슬라이드 PNG를 뽑습니다.
+아이콘은 react-icons의 Tabler(MIT) · Lucide(ISC) 아이콘을 `icons.js`로 PNG 렌더링한 것입니다. 폰트는 Pretendard(OFL)입니다.
+
+```bash
+cd docs/deck_src
+npm install pptxgenjs@3.12.0 react-icons@5.4.0 react@18.3.1 react-dom@18.3.1 sharp@0.33.5
+node icons.js                                  # icons/*.png
+NODE_PATH=$PWD/node_modules PPTX_SKILL=<pptx 스킬 경로> node build.js out.pptx [시연화면.png] [세로/가로 비율]
+powershell -File render.ps1 -Pptx <절대경로\out.pptx> -OutDir <짧은 경로\render> -Pdf <절대경로\out.pdf>
+```
+
+시연 화면 캡처는 두 번째 인자로 넘깁니다(기본값 `scene_placeholder.png`는 보드 미연결 상태 화면).
