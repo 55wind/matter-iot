@@ -1,0 +1,8 @@
+# nRF Connect / west 빌드 결과
+build/
+build_*/
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store

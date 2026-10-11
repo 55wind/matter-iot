@@ -1,0 +1,95 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>침실 노드 시뮬레이터</title>
+<style>
+body{font-family:sans-serif;margin:24px;background:#fafafa}
+button{font-size:18px;padding:8px 14px;margin-right:6px}
+.row{display:flex;gap:56px;margin:24px 0}
+.big{font-size:72px;font-weight:700}
+.warn{color:#c62828}
+label{display:block;font-size:20px;margin:10px 0}
+input[type=range]{width:420px}
+#log{height:150px;overflow:auto;background:#111;color:#7CFC00;font:15px monospace;padding:8px}
+</style>
+<button id="conn">포트 연결</button>
+<button id="scn">벽 냉각 시나리오 ▶</button>
+<button id="reset">쾌적한 방</button>
+<button id="hold">대기 10초</button>
+<div class="row">
+  <div>실내 습도<div class="big" id="rrh">45%</div></div>
+  <div>벽 표면 습도<div class="big" id="srh">--</div></div>
+  <div style="font-size:28px">가습기 <b id="hum">-</b><br>선풍기 <b id="fan">-</b></div>
+</div>
+<label>실내 온도 <input id="rt" type="range" min="15" max="30" step="0.1" value="24"> <span></span>℃</label>
+<label>실내 습도 <input id="rh" type="range" min="20" max="80" step="1" value="45"> <span></span>%</label>
+<label>벽 표면 온도 <input id="wt" type="range" min="0" max="25" step="0.1" value="24"> <span></span>℃</label>
+<label>침구 습도 <input id="bh" type="range" min="30" max="90" step="1" value="50"> <span></span>%</label>
+<pre id="log"></pre>
+<script>
+const $ = id => document.getElementById(id);
+const ids = ['rt','rh','wt','bh'];
+let port, writer, last = 0, timer, holdLong = false, scnTimer;
+
+function send(line){ if (writer) writer.write(new TextEncoder().encode(line + '\r')); }
+
+function push(){
+  ids.forEach(i => $(i).nextElementSibling.textContent = $(i).value);
+  $('rrh').textContent = $('rh').value + '%';
+  const now = Date.now();
+  if (now - last < 200) { clearTimeout(timer); timer = setTimeout(push, 200); return; }
+  last = now;
+  send(`sim ${$('rt').value} ${$('rh').value} ${$('wt').value} ${$('bh').value}`);
+}
+ids.forEach(i => $(i).oninput = push);
+
+$('conn').onclick = async () => {
+  port = await navigator.serial.requestPort();
+  await port.open({ baudRate: 115200 });
+  writer = port.writable.getWriter();
+  readLoop(); push();
+};
+
+async function readLoop(){
+  const r = port.readable.pipeThrough(new TextDecoderStream()).getReader();
+  let buf = '';
+  while (true) {
+    const { value, done } = await r.read();
+    if (done) break;
+    buf += value;
+    let k;
+    while ((k = buf.indexOf('\n')) >= 0) { handle(buf.slice(0, k).trim()); buf = buf.slice(k + 1); }
+  }
+}
+
+function handle(l){
+  const m = l.match(/VAL srh=([\d.]+) humid=(\d) fan=(\d)/);
+  if (m) {
+    const s = parseFloat(m[1]);
+    $('srh').textContent = s >= 100 ? '결로' : s.toFixed(0) + '%';
+    $('srh').className = 'big' + (s >= 75 ? ' warn' : '');
+    $('hum').textContent = m[2] === '1' ? 'ON' : 'OFF';
+    $('fan').textContent = m[3] === '1' ? 'ON' : 'OFF';
+    return;
+  }
+  if (l.includes('EVT')) { $('log').textContent += l + '\n'; $('log').scrollTop = 1e9; }
+}
+
+$('scn').onclick = () => {
+  clearInterval(scnTimer);
+  let t = parseFloat($('wt').value);
+  scnTimer = setInterval(() => {
+    t -= 0.4; $('wt').value = t.toFixed(1); push();
+    if (t <= 14.8) clearInterval(scnTimer);
+  }, 500);
+};
+
+$('reset').onclick = () => {
+  clearInterval(scnTimer);
+  [['rt',24],['rh',45],['wt',24],['bh',50]].forEach(([i,v]) => $(i).value = v);
+  push();
+};
+
+$('hold').onclick = () => {
+  holdLong = !holdLong;
+  send(holdLong ? 'hold 60' : 'hold 10');
+  $('hold').textContent = holdLong ? '대기 60초' : '대기 10초';
+};
+</script></html>
