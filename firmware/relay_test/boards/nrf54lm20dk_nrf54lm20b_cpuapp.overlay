@@ -5,7 +5,7 @@
     relays {
         compatible = "gpio-leds";
         relay_fan: relay_fan {
-            gpios = <&gpio1 4 GPIO_ACTIVE_HIGH>;  /* 고른 핀으로 변경 (P1.04 → &gpio1 4) */
+            gpios = <&gpio1 20 GPIO_ACTIVE_LOW>;  /* P1.20 → 릴레이 IN1, LOW에서 켜지는 릴레이 (IN2는 예비) */
         };
     };
 };
