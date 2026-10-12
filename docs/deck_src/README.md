@@ -1,7 +1,8 @@
 # 발표자료 생성
 
 `build.js`(pptxgenjs)로 `발표자료_침실노드.pptx`를 만들고, `render.ps1`(PowerPoint COM)로 PDF와 슬라이드 PNG를 뽑습니다.
-아이콘은 react-icons의 Tabler(MIT), Lucide(ISC) 아이콘을 `icons.js`로 PNG 렌더링한 것입니다. 폰트는 Pretendard(OFL)입니다.
+아이콘은 react-icons의 Tabler(MIT), Lucide(ISC) 아이콘을 `icons.js`로 PNG 렌더링한 것입니다.
+4장 연결도의 기기 그림은 [Streamline](https://www.streamlinehq.com) Ultimate Color(CC BY 4.0)의 laptop, microchip-board, socket-box, router-signal, temperature-thermometer-high이고, 선풍기, 가습기, 스마트폰은 같은 스타일로 그려 `icons/devices/*.svg`에 넣었습니다. `node devices.js`로 PNG를 만듭니다. 폰트는 Pretendard(OFL)입니다.
 
 ```bash
 cd docs/deck_src

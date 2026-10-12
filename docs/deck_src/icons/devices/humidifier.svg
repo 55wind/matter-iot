@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><!-- drawn for this deck in the Streamline Ultimate Color style --><g fill="none">
+<path stroke="#191919" stroke-linecap="round" stroke-linejoin="round" d="M10.3 6.2c-.9-.9-.9-1.9 0-2.8s.9-1.9 0-2.8M13.7 6.2c-.9-.9-.9-1.9 0-2.8s.9-1.9 0-2.8"/>
+<path fill="#e3e3e3" stroke="#191919" stroke-linecap="round" stroke-linejoin="round" d="M9.8 6.6h4.4a.5.5 0 0 1 .5.5v1.4H9.3V7.1a.5.5 0 0 1 .5-.5z"/>
+<path fill="#fff" stroke="#191919" stroke-linecap="round" stroke-linejoin="round" d="M8.5 8.5h7a2.5 2.5 0 0 1 2.5 2.5v9.5a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V11a2.5 2.5 0 0 1 2.5-2.5z"/>
+<rect x="8" y="13.2" width="8" height="7" rx="1" fill="#66e1ff"/>
+<path fill="#c2f3ff" d="M9 13.2h4.6L8 18.8V14.2a1 1 0 0 1 1-1z"/>
+<rect x="8" y="13.2" width="8" height="7" rx="1" stroke="#191919" stroke-linecap="round" stroke-linejoin="round"/>
+<path stroke="#191919" stroke-linecap="round" stroke-linejoin="round" d="M8 16.2h8"/>
+<circle cx="12" cy="10.9" r=".9" fill="gray" stroke="#191919" stroke-linecap="round" stroke-linejoin="round"/>
+</g></svg>

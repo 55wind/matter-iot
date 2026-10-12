@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><!-- drawn for this deck in the Streamline Ultimate Color style --><g fill="none">
+<rect x="5.8" y="1" width="12.4" height="22" rx="2.2" fill="#e3e3e3" stroke="#191919" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="7.3" y="3.6" width="9.4" height="15.8" rx=".6" fill="#66e1ff"/>
+<path fill="#c2f3ff" d="M7.9 3.6h8.8L7.3 15.1V4.2a.6.6 0 0 1 .6-.6z"/>
+<rect x="7.3" y="3.6" width="9.4" height="15.8" rx=".6" stroke="#191919" stroke-linecap="round" stroke-linejoin="round"/>
+<path stroke="#191919" stroke-linecap="round" stroke-linejoin="round" d="M10.6 2.3h2.8"/>
+<circle cx="12" cy="21.2" r=".8" fill="gray" stroke="#191919" stroke-linecap="round" stroke-linejoin="round"/>
+</g></svg>

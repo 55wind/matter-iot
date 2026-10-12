@@ -210,50 +210,55 @@ s = pres.addSlide({ masterName: "CONTENT", sectionTitle: process.env.SKIP_SECTIO
 s.addText("시연 내용 ① 시연 구성: 기기 간 연결과 역할", { placeholder: "label" });
 s.addText("기기마다 역할을 나눠 하나의 고리로 동작함", { placeholder: "title" });
 tracker(s, 2);
-/* 기기 카드: 아이콘 + 이름 + 한 줄 역할 */
-const NW = 2.5, NH = 1.0, COLX = [0.6, 3.82, 7.04, 10.26], ROWY = [1.55, 3.05];
-const node = (ic, col, row, name, role, o = {}) => {
-  const x = COLX[col], y = ROWY[row];
-  card(s, x, y, NW, NH, o.key ? { fill: { color: "FFFFFF" }, line: { color: o.key, width: 1.5 } }
-    : o.dash ? { fill: { color: "FFFFFF" }, line: { color: "8E8E93", width: 1, dashType: "dash" } } : {});
-  badge(s, ic, x + 0.16, y + 0.27, 0.46, o.key === HEX.green ? C.accent2 : C.accent1);
-  T(s, [{ text: name, options: { bold: true, breakLine: true } }, { text: role, options: { fontSize: 11 } }],
-    { x: x + 0.74, y: y + 0.1, w: NW - 0.82, h: NH - 0.2, fontSize: 12.5, valign: "middle" });
+/* 기기 그림 + 이름 + 역할을 화살표로 연결 (그림: Streamline Ultimate Color, CC BY 4.0. 선풍기, 가습기, 스마트폰은 같은 스타일로 그림) */
+const DEV = (n) => path.join(DIR, "icons", "devices", `${n}.png`);
+const CX = [1.85, 5.07, 8.29, 11.51], IS = 0.75, R1 = 1.5, R2 = 3.15, GRAY = "6E6E73";
+const device = (imgs, cx, y, name, role, o = {}) => {
+  imgs.forEach((img, k) => {
+    const x = cx - IS / 2 + (imgs.length === 2 ? (k ? 0.42 : -0.42) : 0);
+    s.addImage({ path: DEV(img), x, y, w: IS, h: IS, altText: name, transparency: o.ghost ? 50 : 0 });
+  });
+  T(s, [{ text: name, options: { bold: true, breakLine: true } }, { text: role, options: { fontSize: 10.5 } }],
+    { x: cx - 1.3, y: y + IS + 0.03, w: 2.6, h: 0.46, fontSize: 12, align: "center" });
 };
-const link = (x, y, w, h, o = {}) => s.addShape(pres.shapes.LINE, { x, y, w, h, line: { color: o.color || "8E8E93", width: 2, dashType: o.dash ? "dash" : "solid", beginArrowType: o.both ? "triangle" : undefined, endArrowType: o.noArrow ? undefined : "triangle" } });
-const linkLabel = (x0, w, y, top, bottom) => {
-  T(s, top, { x: x0 - 0.15, y: y - 0.28, w: w + 0.3, h: 0.22, fontSize: 10, bold: true, align: "center" });
-  if (bottom) T(s, bottom, { x: x0 - 0.25, y: y + 0.06, w: w + 0.5, h: 0.22, fontSize: 9.5, align: "center" });
+const arrow = (x, y, w, h, o = {}) => s.addShape(pres.shapes.LINE, { x, y, w, h, line: { color: o.color || GRAY, width: 1.75, dashType: o.dash ? "dash" : "solid", beginArrowType: o.both ? "triangle" : undefined, endArrowType: o.noEnd ? undefined : "triangle" } });
+const hLabel = (x0, w, y, top, bottom) => {
+  T(s, top, { x: x0 - 0.2, y: y - 0.3, w: w + 0.4, h: 0.24, fontSize: 10.5, bold: true, align: "center" });
+  T(s, bottom, { x: x0 - 0.2, y: y + 0.06, w: w + 0.4, h: 0.22, fontSize: 9.5, align: "center" });
 };
-node("laptop", 0, 0, "노트북", "가상 침실, 시연 화면");
-node("cpu", 1, 0, "nRF54LM20 DK", "판단 노드, Matter 기기", { key: HEX.green });
-node("plug", 2, 0, "2채널 릴레이", "가전 전원 개입");
-node("fan", 3, 0, "선풍기, 가습기", "벽 데움, 가습");
-node("gauge", 0, 1, "온습도, 벽 온도 센서", "실제 제품 구성", { dash: true });
-node("router", 1, 1, "SmartThings Station", "Thread 보더 라우터, 허브", { key: HEX.blue });
-node("phone", 2, 1, "SmartThings 앱", "등록, 원격 On/Off");
-/* 1행 가로 연결 */
-const midY = ROWY[0] + NH / 2;
-[["USB", "0.5초마다"], ["GPIO", ""], ["전원", "CH1, CH2"]].forEach(([a, b], i) => {
-  const x0 = COLX[i] + NW + 0.04, w = COLX[i + 1] - COLX[i] - NW - 0.08;
-  link(x0, midY, w, 0, { both: i === 0, color: i === 0 ? HEX.blue : "8E8E93" });
-  linkLabel(x0, w, midY, a, b);
+device(["laptop"], CX[0], R1, "노트북", "가상 침실 계산, 시연 화면");
+device(["board"], CX[1], R1, "nRF54LM20 DK", "판단 노드, Matter 기기");
+device(["relay"], CX[2], R1, "2채널 릴레이", "가전 전원 개입");
+device(["fan", "humidifier"], CX[3], R1, "선풍기, 가습기", "벽 데움, 가습 (화면 속 가전)");
+device(["sensor"], CX[0], R2, "온습도, 벽 온도 센서", "실제 제품 구성", { ghost: true });
+device(["hub"], CX[1], R2, "SmartThings Station", "Thread 보더 라우터, 허브");
+device(["phone"], CX[2], R2, "SmartThings 앱", "등록, 원격 On/Off");
+/* 1행: 노트북 ↔ DK → 릴레이 → 가전 */
+const y1 = R1 + IS / 2;
+const row1 = [
+  [CX[0] + 0.55, CX[1] - 0.55, "USB 시리얼", "센서값 → DK, 판단 결과 → 화면", HEX.blue, true],
+  [CX[1] + 0.55, CX[2] - 0.55, "GPIO P1.20, P1.21", "LOW 신호면 켜짐", GRAY, false],
+  [CX[2] + 0.55, CX[3] - 0.92, "전원 ON/OFF", "CH1 선풍기, CH2 가습기", GRAY, false],
+];
+row1.forEach(([a, b, top, bottom, color, both]) => { arrow(a, y1, b - a, 0, { color, both }); hLabel(a, b - a, y1, top, bottom); });
+/* DK ↔ Station (Thread), 노트북 ┆ 센서 */
+const vy = R1 + IS + 0.52, vh = R2 - vy - 0.06;
+arrow(CX[1], vy, 0, vh, { color: HEX.blue, both: true });
+T(s, "Thread (Matter 보고, 명령)", { x: CX[1] + 0.12, y: vy + 0.02, w: 2.4, h: 0.26, fontSize: 10.5, bold: true });
+arrow(CX[0], vy, 0, vh, { dash: true, noEnd: true });
+T(s, "시연에서는 노트북이 대신함", { x: CX[0] + 0.12, y: vy + 0.02, w: 2.4, h: 0.26, fontSize: 10.5, bold: true });
+/* 2행: Station ↔ 앱 (Wi-Fi) */
+const y2 = R2 + IS / 2;
+arrow(CX[1] + 0.55, y2, CX[2] - CX[1] - 1.1, 0, { color: HEX.blue, both: true });
+hLabel(CX[1] + 0.55, CX[2] - CX[1] - 1.1, y2, "Wi-Fi", "SmartThings 클라우드");
+/* 범례와 그림 출처 */
+const LX = 10.3;
+[["통신 (USB, Thread, Wi-Fi)", HEX.blue, false], ["전기 신호 (GPIO, 전원)", GRAY, false], ["실제 제품에서 센서가 들어갈 자리", GRAY, true]].forEach(([t, color, dash], i) => {
+  const y = R2 + 0.12 + i * 0.3;
+  arrow(LX, y + 0.13, 0.4, 0, { color, dash, noEnd: dash });
+  T(s, t, { x: LX + 0.5, y, w: 2.0, h: 0.26, fontSize: 10, valign: "middle" });
 });
-/* DK ↔ Station (Thread) */
-const dkX = COLX[1] + NW / 2, vy = ROWY[0] + NH + 0.04, vh = ROWY[1] - ROWY[0] - NH - 0.08;
-link(dkX, vy, 0, vh, { both: true, color: HEX.blue });
-T(s, "Thread (Matter 보고, 명령)", { x: dkX + 0.12, y: vy + 0.08, w: 2.3, h: 0.26, fontSize: 10, bold: true });
-/* Station ↔ 앱 (Wi-Fi) */
-const midY2 = ROWY[1] + NH / 2, sx0 = COLX[1] + NW + 0.04, s2w = COLX[2] - COLX[1] - NW - 0.08;
-link(sx0, midY2, s2w, 0, { both: true });
-linkLabel(sx0, s2w, midY2, "Wi-Fi", "클라우드");
-/* 센서 ↔ 노트북: 시연에서는 노트북이 센서를 대신함 */
-const lpX = COLX[0] + NW / 2;
-link(lpX, vy, 0, vh, { dash: true, noArrow: true });
-T(s, "시연에서는 노트북이 대신함", { x: lpX + 0.12, y: vy + 0.08, w: 2.2, h: 0.26, fontSize: 10, bold: true });
-/* 범례 */
-T(s, [{ text: "실선: 시연에서 실제로 동작하는 연결", options: { breakLine: true } }, { text: "점선: 실제 제품에서 센서가 들어갈 자리" }],
-  { x: COLX[3], y: ROWY[1] + 0.2, w: NW + 0.2, h: 0.6, fontSize: 10.5, valign: "middle" });
+T(s, "기기 그림: Streamline (CC BY 4.0)", { x: LX, y: R2 + 1.0, w: 2.45, h: 0.22, fontSize: 9 });
 
 /* 기기별 역할 */
 s.addTable([
@@ -264,16 +269,16 @@ s.addTable([
   ["선풍기, 가습기", "벽 데움, 가습 (화면 속 가전)", "릴레이 CH1, CH2"],
   ["SmartThings Station", "Thread 보더 라우터, Matter 허브", "Thread, Wi-Fi"],
   ["SmartThings 앱", "노드 등록, 원격 On/Off", "BLE(등록), Wi-Fi"],
-], tableOpts(0.6, 4.33, 7.0, [1.85, 3.0, 2.15], { rowH: 0.35, fontSize: 11 }));
+], tableOpts(0.6, 4.5, 7.0, [1.85, 3.0, 2.15], { rowH: 0.33, fontSize: 11 }));
 
 /* 배선도 (도형) */
-const WX = 7.85, WY = 4.33;
+const WX = 7.85, WY = 4.5;
 T(s, "회로: DK ↔ 2채널 릴레이", { x: WX, y: WY, w: 4.9, h: 0.3, fontSize: 13, bold: true });
-s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: WX, y: WY + 0.36, w: 2.3, h: 2.12, rectRadius: 0.1, fill: { color: "FFFFFF" }, line: { color: HEX.green, width: 1.5 } });
+s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: WX, y: WY + 0.34, w: 2.3, h: 1.98, rectRadius: 0.1, fill: { color: "FFFFFF" }, line: { color: HEX.green, width: 1.5 } });
 T(s, "nRF54LM20 DK", { x: WX + 0.13, y: WY + 0.45, w: 1.7, h: 0.28, fontSize: 12, bold: true });
 s.addImage({ path: ICON("cpu", "green"), x: WX + 1.95, y: WY + 0.47, w: 0.24, h: 0.24, altText: "DK" });
 const RX = 10.95;
-s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: RX, y: WY + 0.36, w: 1.8, h: 2.12, rectRadius: 0.1, fill: { color: C.background2 }, line: { color: HEX.hair, width: 0.75 } });
+s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: RX, y: WY + 0.34, w: 1.8, h: 1.98, rectRadius: 0.1, fill: { color: C.background2 }, line: { color: HEX.hair, width: 0.75 } });
 T(s, [{ text: "2채널 릴레이", options: { bold: true, breakLine: true } }, { text: "LOW에서 켜짐", options: { fontSize: 10, bold: false } }], { x: RX + 0.1, y: WY + 0.43, w: 1.4, h: 0.45, fontSize: 12 });
 s.addImage({ path: ICON("plug", "ink"), x: RX + 1.47, y: WY + 0.47, w: 0.24, h: 0.24, altText: "릴레이" });
 const pins = [
@@ -283,7 +288,7 @@ const pins = [
   ["LED3 표면 80%↑", "P1.21", "IN2", "F08A00", "가습기 신호", "CH2 가습기"],
 ];
 pins.forEach(([led, dk, rl, col, wire, ch], i) => {
-  const y = WY + 0.95 + i * 0.38;
+  const y = WY + 0.9 + i * 0.35;
   s.addShape(pres.shapes.OVAL, { x: WX + 0.13, y: y + 0.1, w: 0.11, h: 0.11, fill: { color: "30D158" }, line: { color: "30D158", width: 0 } });
   T(s, led, { x: WX + 0.29, y, w: 1.25, h: 0.3, fontSize: 9.5, valign: "middle" });
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: WX + 1.55, y, w: 0.68, h: 0.3, rectRadius: 0.05, fill: { color: "FFFFFF" }, line: { color: "C7C7CC", width: 0.75 } });
