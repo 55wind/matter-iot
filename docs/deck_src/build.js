@@ -37,7 +37,7 @@ pres.defineSlideMaster({
   title: "CONTENT",
   background: { color: "FFFFFF" },
   objects: [
-    { placeholder: { options: { name: "label", type: "body", x: 0.6, y: 0.32, w: 9, h: 0.32, fontSize: 13, bold: true, color: C.text1, margin: 0 }, text: "" } },
+    { placeholder: { options: { name: "label", type: "body", x: 0.6, y: 0.32, w: 8, h: 0.32, fontSize: 13, bold: true, color: C.text1, margin: 0 }, text: "" } },
     { placeholder: { options: { name: "title", type: "title", x: 0.6, y: 0.62, w: 12.1, h: 0.72, fontSize: 30, bold: true, color: C.text1, margin: 0, valign: "top", align: "left" }, text: "" } },
     { text: { text: "침실 환경 면역 방어 노드  |  팀 밤새고 네집내집가기  |  지능형 홈(AI@Home) Matter AX Sprint 2026", options: { x: 0.6, y: 7.05, w: 9, h: 0.25, fontSize: 10, color: C.text1, margin: 0 } } },
   ],
@@ -62,11 +62,23 @@ const iconRow = (slide, name, x, y, w, title, desc, o = {}) => {
     { x: x + (o.d || 0.46) + 0.2, y: y - 0.04, w: w - (o.d || 0.46) - 0.2, h: o.h || 0.62, fontSize: o.size || 14 });
 };
 
+/* 오른쪽 위: 핵심 주제 / 주요 개발 내용 / 시연 내용 중 지금 위치 */
+const PARTS = [["핵심 주제", 0.95], ["주요 개발 내용", 1.35], ["시연 내용", 0.95]];
+const tracker = (slide, cur) => {
+  let x = 12.75 - PARTS.reduce((a, [, w]) => a + w, 0) - 0.1 * (PARTS.length - 1);
+  PARTS.forEach(([t, w], i) => {
+    if (i === cur) slide.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y: 0.28, w, h: 0.32, rectRadius: 0.16, fill: { color: HEX.parch }, line: { color: HEX.blue, width: 1 } });
+    T(slide, t, { x, y: 0.28, w, h: 0.32, fontSize: 11.5, bold: i === cur, align: "center", valign: "middle" });
+    x += w + 0.1;
+  });
+};
+
 /* ---------- 1. 핵심 주제 ---------- */
 if (!process.env.SKIP_SECTION) pres.addSection({ title: "핵심 주제" });
 let s = pres.addSlide({ masterName: "CONTENT", sectionTitle: process.env.SKIP_SECTION ? undefined : "핵심 주제" });
 s.addText("핵심 주제  (응모 분야 Living Assist)", { placeholder: "label" });
 s.addText("방 습도계가 45%여도 차가운 벽 표면은 80%임", { placeholder: "title" });
+tracker(s, 0);
 T(s, "벽 표면 습도를 계산해 곰팡이 임계 전에 가습기와 선풍기를 스스로 조절하는 Matter 디바이스를 제안함", { x: 0.6, y: 1.36, w: 12.1, h: 0.35, fontSize: 15 });
 
 card(s, 0.6, 1.95, 2.9, 1.9);
@@ -101,80 +113,32 @@ T(s, [{ text: "벽이 약 7.2℃ 아래로 내려가면 두 목표를 함께 만
   { x: 7.0, y: 6.05, w: 5.75, h: 0.7, fontSize: 14 });
 s.addNotes("방 습도계가 45%로 안전해 보여도 12℃까지 식은 북측 벽 표면에 닿은 공기는 80%임. 곰팡이 임계는 벽 표면 값으로 정해짐. 수면, 점막 방어, 곰팡이 세 목표가 서로 충돌하고, 벽 온도에 따라 허용 습도 구간이 30%에서 55%까지 달라짐. 이 구간을 계산해 지키는 것이 이 노드임.");
 
-/* ---------- 2. 시스템 구성과 회로 ---------- */
+/* ---------- 2. 개발 환경과 Matter SDK ---------- */
 if (!process.env.SKIP_SECTION) pres.addSection({ title: "주요 개발 내용" });
 s = pres.addSlide({ masterName: "CONTENT", sectionTitle: process.env.SKIP_SECTION ? undefined : "주요 개발 내용" });
-s.addText("주요 개발 내용 ① 시스템 구성과 회로", { placeholder: "label" });
-s.addText("보드 안에서 판단하고, 릴레이로 개입하고, Matter로 보고함", { placeholder: "title" });
-/* 구성도 (도형 + 아이콘) */
-const arch = [
-  { ic: "gauge", t: "측정", lines: ["실내 온도와 습도", "벽 표면 온도, 침구 습도", "시연에서는 가상 침실이 값을 생성함"] },
-  { ic: "cpu", t: "판단", lines: ["nRF54LM20 DK 안에서 처리함", "표면 습도 계산, 75/70% 판정", "학습과 예측, 클라우드 불필요"], key: HEX.green },
-  { ic: "plug", t: "개입", lines: ["2채널 릴레이", "CH1 선풍기, CH2 가습기", "GPIO P1.20, P1.21"] },
-  { ic: "wave", t: "노출 (Matter)", lines: ["EP1 선풍기, EP5 가습기", "EP2, EP3 습도, EP4 온도", "표준 클러스터 사용"], key: HEX.blue },
-];
-arch.forEach((c, i) => {
-  const x = 0.6 + i * 3.1, y = 1.5, w = 2.85, h = 1.6;
-  card(s, x, y, w, h, c.key ? { fill: { color: "FFFFFF" }, line: { color: c.key, width: 1.5 } } : {});
-  badge(s, c.ic, x + 0.2, y + 0.2, 0.42, c.key === HEX.green ? C.accent2 : C.accent1);
-  T(s, c.t, { x: x + 0.74, y: y + 0.24, w: w - 0.9, h: 0.36, fontSize: 15, bold: true, valign: "middle" });
-  T(s, c.lines.map((l, k) => ({ text: l, options: { breakLine: k < c.lines.length - 1 } })), { x: x + 0.2, y: y + 0.76, w: w - 0.3, h: 0.78, fontSize: 12 });
-  if (i < 3) s.addShape(pres.shapes.LINE, { x: x + w + 0.02, y: y + 0.8, w: 0.21, h: 0, line: { color: i === 2 ? HEX.blue : "8E8E93", width: 2, endArrowType: "triangle" } });
-});
-/* 닫힌 고리 */
-s.addShape(pres.shapes.LINE, { x: 7.425, y: 3.1, w: 0, h: 0.38, line: { color: "8E8E93", width: 1.5, dashType: "dash" } });
-s.addShape(pres.shapes.LINE, { x: 2.025, y: 3.48, w: 5.4, h: 0, line: { color: "8E8E93", width: 1.5, dashType: "dash" } });
-s.addShape(pres.shapes.LINE, { x: 2.025, y: 3.1, w: 0, h: 0.38, line: { color: "8E8E93", width: 1.5, dashType: "dash", beginArrowType: "triangle" } });
-T(s, "닫힌 고리: 선풍기와 가습기가 바꾼 환경이 다시 측정값으로 돌아옴", { x: 2.4, y: 3.56, w: 4.9, h: 0.3, fontSize: 12 });
-/* Matter → 허브 → 앱 */
-card(s, 9.9, 3.32, 2.85, 0.56, { fill: { color: "FFFFFF" } });
-s.addImage({ path: ICON("router", "ink"), x: 10.05, y: 3.44, w: 0.32, h: 0.32, altText: "SmartThings Station" });
-T(s, [{ text: "SmartThings Station과 앱", options: { bold: true, breakLine: true } }, { text: "Thread로 보고, 수신 확인", options: {} }], { x: 10.45, y: 3.34, w: 2.25, h: 0.52, fontSize: 11, valign: "middle" });
-s.addShape(pres.shapes.LINE, { x: 11.325, y: 3.1, w: 0, h: 0.22, line: { color: HEX.blue, width: 2, endArrowType: "triangle" } });
-
-/* 배선도 (도형) */
-T(s, "회로: DK ↔ 2채널 릴레이", { x: 0.6, y: 4.08, w: 6, h: 0.3, fontSize: 14, bold: true });
-s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 0.6, y: 4.45, w: 2.95, h: 2.42, rectRadius: 0.12, fill: { color: "FFFFFF" }, line: { color: HEX.green, width: 1.5 } });
-T(s, "nRF54LM20 DK", { x: 0.8, y: 4.58, w: 2.2, h: 0.3, fontSize: 14, bold: true });
-T(s, "PCA10184, nRF54LM20B", { x: 0.8, y: 4.88, w: 2.2, h: 0.25, fontSize: 11 });
-s.addImage({ path: ICON("cpu", "green"), x: 3.08, y: 4.58, w: 0.32, h: 0.32, altText: "DK" });
-s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 5.25, y: 4.45, w: 2.55, h: 2.42, rectRadius: 0.12, fill: { color: C.background2 }, line: { color: HEX.hair, width: 0.75 } });
-T(s, "2채널 릴레이", { x: 5.4, y: 4.58, w: 1.8, h: 0.3, fontSize: 14, bold: true });
-T(s, "LOW에서 켜짐 (점퍼 L)", { x: 5.4, y: 4.88, w: 2.2, h: 0.25, fontSize: 11 });
-s.addImage({ path: ICON("plug", "ink"), x: 7.35, y: 4.58, w: 0.3, h: 0.3, altText: "릴레이" });
-const pins = [
-  ["LED0 Matter 상태", "5V0", "DC+", "E30000", "5V 전원", ""],
-  ["LED1 선풍기", "GND", "DC−", "1D1D1F", "접지", ""],
-  ["LED2 가습기", "P1.20", "IN1", HEX.blue, "선풍기 신호", "CH1 선풍기"],
-  ["LED3 표면 80%↑", "P1.21", "IN2", "F08A00", "가습기 신호", "CH2 가습기"],
-];
-pins.forEach(([led, dk, rl, col, wire, ch], i) => {
-  const y = 5.25 + i * 0.4;
-  s.addShape(pres.shapes.OVAL, { x: 0.82, y: y + 0.11, w: 0.13, h: 0.13, fill: { color: "30D158" }, line: { color: "30D158", width: 0 } });
-  T(s, led, { x: 1.02, y, w: 1.45, h: 0.34, fontSize: 11, valign: "middle" });
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 2.55, y, w: 0.85, h: 0.32, rectRadius: 0.06, fill: { color: "FFFFFF" }, line: { color: "C7C7CC", width: 0.75 } });
-  T(s, dk, { x: 2.55, y, w: 0.85, h: 0.32, fontSize: 11, bold: true, align: "center", valign: "middle" });
-  s.addShape(pres.shapes.LINE, { x: 3.4, y: y + 0.16, w: 1.98, h: 0, line: { color: col, width: 3 } });
-  T(s, wire, { x: 3.55, y: y - 0.12, w: 1.7, h: 0.22, fontSize: 10, align: "center" });
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 5.38, y, w: 0.7, h: 0.32, rectRadius: 0.06, fill: { color: "FFFFFF" }, line: { color: "C7C7CC", width: 0.75 } });
-  T(s, rl, { x: 5.38, y, w: 0.7, h: 0.32, fontSize: 11, bold: true, align: "center", valign: "middle" });
-  if (ch) {
-    s.addImage({ path: ICON(i === 2 ? "fan" : "mist", i === 2 ? "blue" : "ink"), x: 6.2, y: y + 0.02, w: 0.28, h: 0.28, altText: ch });
-    T(s, ch, { x: 6.52, y, w: 1.2, h: 0.32, fontSize: 11, bold: true, valign: "middle" });
-  }
-});
-
-/* 구현 포인트 */
-T(s, "하드웨어 구현에서 해결한 것", { x: 8.2, y: 4.08, w: 4.5, h: 0.3, fontSize: 14, bold: true });
-iconRow(s, "cpu", 8.2, 4.55, 4.55, "보드 타깃 nrf54lm20b", "칩이 nRF54LM20B라 설명서의 a 타깃 대신 b로 빌드함", { d: 0.42, h: 0.62, size: 13, descSize: 12 });
-iconRow(s, "plug", 8.2, 5.3, 4.55, "devicetree overlay로 릴레이 핀 정의", "P1.20, P1.21을 GPIO_ACTIVE_LOW로 정의함", { d: 0.42, h: 0.62, size: 13, descSize: 12 });
-iconRow(s, "alert", 8.2, 6.05, 4.55, "P1.22 제외", "DK의 LED0 핀과 겹쳐 오동작해 옆 핀 P1.21로 이동함", { d: 0.42, h: 0.62, size: 13, descSize: 12 });
-s.addNotes("구성은 측정, 판단, 개입, 노출 4계층임. 판단은 nRF54LM20 DK 안에서 끝나고, 결과는 릴레이로 가전 전원을 켜고 끄며, 같은 결과를 Matter 엔드포인트로 SmartThings에 보고함. 릴레이는 LOW에서 켜지는 모듈이라 핀을 active-low로 정의함.");
-
-/* ---------- 3. Matter SDK 활용 ---------- */
-s = pres.addSlide({ masterName: "CONTENT", sectionTitle: process.env.SKIP_SECTION ? undefined : "주요 개발 내용" });
-s.addText("주요 개발 내용 ② Matter SDK 활용", { placeholder: "label" });
+s.addText("주요 개발 내용 ① 개발 환경과 Matter SDK", { placeholder: "label" });
 s.addText("nRF Connect SDK로 노드 하나를 엔드포인트 6개로 직접 구성함", { placeholder: "title" });
+tracker(s, 1);
+const two = (a, b) => [{ text: a, options: { breakLine: true } }, { text: b }];
+T(s, "개발 환경", { x: 0.6, y: 1.5, w: 5.6, h: 0.3, fontSize: 14, bold: true });
+s.addTable([
+  head(["구분", "내용"]),
+  [{ text: "사용 언어", options: { bold: true } }, { text: two("C (판단 로직), C++ (Matter 앱)", "JavaScript, HTML (시연 화면), Python (시험 도구)") }],
+  [{ text: "사용 기기", options: { bold: true } }, { text: two("nRF54LM20 DK, 2채널 릴레이, 노트북", "SmartThings Station, 스마트폰 (SmartThings 앱)") }],
+  [{ text: "SDK, 도구", options: { bold: true } }, { text: two("nRF Connect SDK v3.4.1 (Zephyr RTOS, Matter)", "ZAP, west, J-Link, nrfutil") }],
+  [{ text: "통신", options: { bold: true } }, { text: two("Matter over Thread, BLE 커미셔닝", "USB 시리얼 (Web Serial, 115200)") }],
+], tableOpts(0.6, 1.85, 5.6, [1.2, 4.4], { rowH: [0.35, 0.52, 0.52, 0.52, 0.52], fontSize: 11 }));
+
+T(s, "Matter SDK 활용", { x: 0.6, y: 4.45, w: 5.6, h: 0.3, fontSize: 14, bold: true });
+const steps = [
+  ["db", "ZAP 데이터 모델", "light_bulb.zap에 EP2~EP5를 추가해 west zap-generate로 생성함"],
+  ["upload", "속성 게시", "Accessors로 값을 설정하면 SDK가 허브에 ReportData로 보고함"],
+  ["hand", "앱 조작 수신", "MatterPostAttributeChangeCallback으로 받아 릴레이와 판단부에 반영함"],
+  ["qr", "커미셔닝", "공장 데이터와 BLE로 SmartThings에 등록하고 Thread에 합류함"],
+];
+steps.forEach(([ic, h, d], i) => iconRow(s, ic, 0.6, 4.88 + i * 0.5, 5.6, h, d, { d: 0.38, h: 0.46, size: 12, descSize: 11 }));
+
+T(s, "Matter 엔드포인트 (표준 클러스터)", { x: 6.5, y: 1.5, w: 6.25, h: 0.3, fontSize: 14, bold: true });
 s.addTable([
   head(["EP", "디바이스 타입", "표준 클러스터", "노드가 하는 일"]),
   ["0", "Root Node", "Basic Info, 커미셔닝, Thread", "커미셔닝, Thread 합류"],
@@ -183,36 +147,26 @@ s.addTable([
   ["3", "Humidity Sensor", "Relative Humidity Meas.", "실내 습도 (방 습도계)"],
   ["4", "Temperature Sensor", "Temperature Measurement", "벽 표면 온도"],
   ["5", "On/Off Plug-in → 가습기", "On/Off, Groups", "On/Off → 릴레이 CH2"],
-], tableOpts(0.6, 1.5, 7.55, [0.45, 2.35, 2.35, 2.4], { rowH: 0.38, fontSize: 12 }));
+], tableOpts(6.5, 1.85, 6.25, [0.38, 1.85, 2.17, 1.85], { rowH: 0.35, fontSize: 10.5, margin: [0.04, 0.05, 0.04, 0.05] }));
 
-const steps = [
-  ["db", "ZAP 데이터 모델", "light_bulb.zap에 EP2~EP5를 추가하고 west zap-generate로 생성함"],
-  ["upload", "속성 게시", "Accessors로 값 설정, ScheduleWork로 Matter 스레드에서 실행, 허브에 ReportData 전송함"],
-  ["hand", "앱 조작 수신", "MatterPostAttributeChangeCallback으로 받아 릴레이 구동과 판단부에 반영함"],
-  ["qr", "커미셔닝", "공장 데이터와 BLE로 SmartThings에 등록하고 Thread 네트워크에 합류함"],
-];
-steps.forEach(([ic, h, d], i) => iconRow(s, ic, 0.6, 4.45 + i * 0.6, 7.55, h, d, { d: 0.42, h: 0.56, size: 13, descSize: 12 }));
-
-card(s, 8.5, 1.5, 4.25, 5.3, { fill: { color: "FFFFFF" } });
-s.addImage({ path: PHONE, x: 8.75, y: 1.7, w: 1.75, h: 1.75 * 1404 / 648, altText: "SmartThings 앱에 등록된 노드" });
-T(s, "SmartThings 등록 화면", { x: 8.75, y: 5.55, w: 1.9, h: 0.3, fontSize: 11 });
-const stat = (ic, y, big, small) => {
-  s.addImage({ path: ICON(ic, "blue"), x: 10.72, y: y + 0.06, w: 0.34, h: 0.34, altText: ic });
-  T(s, big, { x: 11.12, y, w: 1.55, h: 0.48, fontSize: 22, bold: true });
-  T(s, small, { x: 10.72, y: y + 0.5, w: 1.95, h: 0.5, fontSize: 11 });
+s.addImage({ path: PHONE, x: 6.5, y: 4.45, w: 2.35 * 648 / 1404, h: 2.35, altText: "SmartThings 앱에 등록된 노드" });
+const stat = (ic, x, y, big, small) => {
+  s.addImage({ path: ICON(ic, "blue"), x, y: y + 0.05, w: 0.3, h: 0.3, altText: ic });
+  T(s, big, { x: x + 0.38, y, w: 1.9, h: 0.42, fontSize: 20, bold: true });
+  T(s, small, { x, y: y + 0.44, w: 2.3, h: 0.3, fontSize: 10.5 });
 };
-stat("wave", 1.75, "12 / 12", "허브 보고 / 수신 확인 (시연 1회)");
-stat("chart", 2.85, "92 ms", "보고 후 허브 응답 (평균)");
-stat("cpu", 3.95, "42%", "Flash 사용 (RAM 36%)");
-stat("db", 5.05, "v3.4.1", "nRF Connect SDK");
-T(s, [{ text: "SmartThings 앱은 스위치와 센서가 섞인 기기에서", options: { breakLine: true } }, { text: "센서 엔드포인트를 표시하지 않음.", options: { breakLine: true } }, { text: "그래서 EP2~EP4 값은 시연 화면에서 함께 보여줌." }],
-  { x: 8.75, y: 6.0, w: 3.85, h: 0.7, fontSize: 11 });
-s.addNotes("SDK 예제 위에 엔드포인트를 직접 추가함. 습도와 온도는 표준 측정 클러스터로, 가습기와 선풍기는 On/Off로 노출함. 판단부가 속성을 설정하면 SDK가 허브로 ReportData를 보내고, 시연 1회 동안 12번 보고해 12번 모두 수신 확인을 받았으며 응답은 평균 92ms였음. 앱에서 직접 조작한 값은 콜백으로 받아 판단부에 반영함.");
+stat("wave", 7.85, 4.5, "12 / 12", "허브 보고 / 수신 확인 (시연 1회)");
+stat("chart", 10.35, 4.5, "92 ms", "보고 후 허브 응답 (평균)");
+stat("cpu", 7.85, 5.4, "42%", "Flash 사용 (RAM 36%)");
+stat("db", 10.35, 5.4, "v3.4.1", "nRF Connect SDK");
+T(s, two("왼쪽: SmartThings 앱 등록 화면", "앱은 센서 EP를 표시하지 않아 시연 화면에서 보여줌"), { x: 7.85, y: 6.3, w: 4.9, h: 0.48, fontSize: 10.5 });
+s.addNotes("펌웨어는 C와 C++로, 시연 화면은 JavaScript와 HTML로, 시험 도구는 Python으로 작성함. nRF Connect SDK v3.4.1의 Matter 예제 위에 엔드포인트를 직접 추가함. 습도와 온도는 표준 측정 클러스터로, 가습기와 선풍기는 On/Off로 노출함. 판단부가 속성을 설정하면 SDK가 허브로 ReportData를 보내고, 시연 1회 동안 12번 보고해 12번 모두 수신 확인을 받았으며 응답은 평균 92ms였음. 앱에서 직접 조작한 값은 콜백으로 받아 판단부에 반영함. 칩이 nRF54LM20B라 보드 타깃을 b로 빌드함.");
 
 /* ---------- 4. 온디바이스 판단 ---------- */
 s = pres.addSlide({ masterName: "CONTENT", sectionTitle: process.env.SKIP_SECTION ? undefined : "주요 개발 내용" });
-s.addText("주요 개발 내용 ③ 온디바이스 판단", { placeholder: "label" });
+s.addText("주요 개발 내용 ② 온디바이스 판단", { placeholder: "label" });
 s.addText("노드가 스스로 계산하고 학습하고 개입함", { placeholder: "title" });
+tracker(s, 1);
 card(s, 0.6, 1.5, 6.55, 5.3);
 badge(s, "calc", 0.85, 1.72, 0.42);
 T(s, "계산: 차가운 벽 앞 공기의 습도를 구함", { x: 1.42, y: 1.68, w: 5.5, h: 0.3, fontSize: 16, bold: true });
@@ -250,10 +204,105 @@ const rules = [
 rules.forEach(([ic, h, d], i) => iconRow(s, ic, 7.45, 1.98 + i * 0.6, 5.3, h, d, { d: 0.4, h: 0.56, size: 13, descSize: 12 }));
 s.addNotes("노드는 0.5초마다 벽 표면 습도와 절대습도를 계산함. 예를 들어 방이 21℃, 45%이고 벽이 12℃이면 벽 표면 습도는 약 80%로 곰팡이 임계에 닿음. 75%에서 가습을 멈추고, 그래도 오르면 선풍기를 켬. 선풍기를 켤 때 벽이 몇 도 오르는지 스스로 재서, 선풍기를 꺼도 안전한지를 판단함. 선풍기로 허용 구간을 넓힌 뒤에는 선풍기를 켠 채로 가습을 이어가 점막 방어와 곰팡이 방어를 동시에 지킴.");
 
-/* ---------- 5. 시연 내용 ---------- */
+/* ---------- 4. 시연 구성: 기기 간 연결과 기기별 역할 ---------- */
 if (!process.env.SKIP_SECTION) pres.addSection({ title: "시연 내용" });
 s = pres.addSlide({ masterName: "CONTENT", sectionTitle: process.env.SKIP_SECTION ? undefined : "시연 내용" });
-s.addText("시연 내용", { placeholder: "label" });
+s.addText("시연 내용 ① 시연 구성: 기기 간 연결과 역할", { placeholder: "label" });
+s.addText("기기마다 역할을 나눠 하나의 고리로 동작함", { placeholder: "title" });
+tracker(s, 2);
+/* 기기 카드: 아이콘 + 이름 + 한 줄 역할 */
+const NW = 2.5, NH = 1.0, COLX = [0.6, 3.82, 7.04, 10.26], ROWY = [1.55, 3.05];
+const node = (ic, col, row, name, role, o = {}) => {
+  const x = COLX[col], y = ROWY[row];
+  card(s, x, y, NW, NH, o.key ? { fill: { color: "FFFFFF" }, line: { color: o.key, width: 1.5 } }
+    : o.dash ? { fill: { color: "FFFFFF" }, line: { color: "8E8E93", width: 1, dashType: "dash" } } : {});
+  badge(s, ic, x + 0.16, y + 0.27, 0.46, o.key === HEX.green ? C.accent2 : C.accent1);
+  T(s, [{ text: name, options: { bold: true, breakLine: true } }, { text: role, options: { fontSize: 11 } }],
+    { x: x + 0.74, y: y + 0.1, w: NW - 0.82, h: NH - 0.2, fontSize: 12.5, valign: "middle" });
+};
+const link = (x, y, w, h, o = {}) => s.addShape(pres.shapes.LINE, { x, y, w, h, line: { color: o.color || "8E8E93", width: 2, dashType: o.dash ? "dash" : "solid", beginArrowType: o.both ? "triangle" : undefined, endArrowType: o.noArrow ? undefined : "triangle" } });
+const linkLabel = (x0, w, y, top, bottom) => {
+  T(s, top, { x: x0 - 0.15, y: y - 0.28, w: w + 0.3, h: 0.22, fontSize: 10, bold: true, align: "center" });
+  if (bottom) T(s, bottom, { x: x0 - 0.25, y: y + 0.06, w: w + 0.5, h: 0.22, fontSize: 9.5, align: "center" });
+};
+node("laptop", 0, 0, "노트북", "가상 침실, 시연 화면");
+node("cpu", 1, 0, "nRF54LM20 DK", "판단 노드, Matter 기기", { key: HEX.green });
+node("plug", 2, 0, "2채널 릴레이", "가전 전원 개입");
+node("fan", 3, 0, "선풍기, 가습기", "벽 데움, 가습");
+node("gauge", 0, 1, "온습도, 벽 온도 센서", "실제 제품 구성", { dash: true });
+node("router", 1, 1, "SmartThings Station", "Thread 보더 라우터, 허브", { key: HEX.blue });
+node("phone", 2, 1, "SmartThings 앱", "등록, 원격 On/Off");
+/* 1행 가로 연결 */
+const midY = ROWY[0] + NH / 2;
+[["USB", "0.5초마다"], ["GPIO", ""], ["전원", "CH1, CH2"]].forEach(([a, b], i) => {
+  const x0 = COLX[i] + NW + 0.04, w = COLX[i + 1] - COLX[i] - NW - 0.08;
+  link(x0, midY, w, 0, { both: i === 0, color: i === 0 ? HEX.blue : "8E8E93" });
+  linkLabel(x0, w, midY, a, b);
+});
+/* DK ↔ Station (Thread) */
+const dkX = COLX[1] + NW / 2, vy = ROWY[0] + NH + 0.04, vh = ROWY[1] - ROWY[0] - NH - 0.08;
+link(dkX, vy, 0, vh, { both: true, color: HEX.blue });
+T(s, "Thread (Matter 보고, 명령)", { x: dkX + 0.12, y: vy + 0.08, w: 2.3, h: 0.26, fontSize: 10, bold: true });
+/* Station ↔ 앱 (Wi-Fi) */
+const midY2 = ROWY[1] + NH / 2, sx0 = COLX[1] + NW + 0.04, s2w = COLX[2] - COLX[1] - NW - 0.08;
+link(sx0, midY2, s2w, 0, { both: true });
+linkLabel(sx0, s2w, midY2, "Wi-Fi", "클라우드");
+/* 센서 ↔ 노트북: 시연에서는 노트북이 센서를 대신함 */
+const lpX = COLX[0] + NW / 2;
+link(lpX, vy, 0, vh, { dash: true, noArrow: true });
+T(s, "시연에서는 노트북이 대신함", { x: lpX + 0.12, y: vy + 0.08, w: 2.2, h: 0.26, fontSize: 10, bold: true });
+/* 범례 */
+T(s, [{ text: "실선: 시연에서 실제로 동작하는 연결", options: { breakLine: true } }, { text: "점선: 실제 제품에서 센서가 들어갈 자리" }],
+  { x: COLX[3], y: ROWY[1] + 0.2, w: NW + 0.2, h: 0.6, fontSize: 10.5, valign: "middle" });
+
+/* 기기별 역할 */
+s.addTable([
+  head(["기기", "맡은 역할", "연결"]),
+  ["노트북", "가상 침실 계산, 시연 화면", "USB 시리얼"],
+  ["nRF54LM20 DK", "표면 습도 계산, 판단, 릴레이 구동", "USB, GPIO, Thread"],
+  ["2채널 릴레이", "선풍기, 가습기 전원 개입", "GPIO P1.20, P1.21"],
+  ["선풍기, 가습기", "벽 데움, 가습 (화면 속 가전)", "릴레이 CH1, CH2"],
+  ["SmartThings Station", "Thread 보더 라우터, Matter 허브", "Thread, Wi-Fi"],
+  ["SmartThings 앱", "노드 등록, 원격 On/Off", "BLE(등록), Wi-Fi"],
+], tableOpts(0.6, 4.33, 7.0, [1.85, 3.0, 2.15], { rowH: 0.35, fontSize: 11 }));
+
+/* 배선도 (도형) */
+const WX = 7.85, WY = 4.33;
+T(s, "회로: DK ↔ 2채널 릴레이", { x: WX, y: WY, w: 4.9, h: 0.3, fontSize: 13, bold: true });
+s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: WX, y: WY + 0.36, w: 2.3, h: 2.12, rectRadius: 0.1, fill: { color: "FFFFFF" }, line: { color: HEX.green, width: 1.5 } });
+T(s, "nRF54LM20 DK", { x: WX + 0.13, y: WY + 0.45, w: 1.7, h: 0.28, fontSize: 12, bold: true });
+s.addImage({ path: ICON("cpu", "green"), x: WX + 1.95, y: WY + 0.47, w: 0.24, h: 0.24, altText: "DK" });
+const RX = 10.95;
+s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: RX, y: WY + 0.36, w: 1.8, h: 2.12, rectRadius: 0.1, fill: { color: C.background2 }, line: { color: HEX.hair, width: 0.75 } });
+T(s, [{ text: "2채널 릴레이", options: { bold: true, breakLine: true } }, { text: "LOW에서 켜짐", options: { fontSize: 10, bold: false } }], { x: RX + 0.1, y: WY + 0.43, w: 1.4, h: 0.45, fontSize: 12 });
+s.addImage({ path: ICON("plug", "ink"), x: RX + 1.47, y: WY + 0.47, w: 0.24, h: 0.24, altText: "릴레이" });
+const pins = [
+  ["LED0 Matter 상태", "5V0", "DC+", "E30000", "5V 전원", ""],
+  ["LED1 선풍기", "GND", "DC−", "1D1D1F", "접지", ""],
+  ["LED2 가습기", "P1.20", "IN1", HEX.blue, "선풍기 신호", "CH1 선풍기"],
+  ["LED3 표면 80%↑", "P1.21", "IN2", "F08A00", "가습기 신호", "CH2 가습기"],
+];
+pins.forEach(([led, dk, rl, col, wire, ch], i) => {
+  const y = WY + 0.95 + i * 0.38;
+  s.addShape(pres.shapes.OVAL, { x: WX + 0.13, y: y + 0.1, w: 0.11, h: 0.11, fill: { color: "30D158" }, line: { color: "30D158", width: 0 } });
+  T(s, led, { x: WX + 0.29, y, w: 1.25, h: 0.3, fontSize: 9.5, valign: "middle" });
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: WX + 1.55, y, w: 0.68, h: 0.3, rectRadius: 0.05, fill: { color: "FFFFFF" }, line: { color: "C7C7CC", width: 0.75 } });
+  T(s, dk, { x: WX + 1.55, y, w: 0.68, h: 0.3, fontSize: 10, bold: true, align: "center", valign: "middle" });
+  s.addShape(pres.shapes.LINE, { x: WX + 2.23, y: y + 0.15, w: RX + 0.1 - WX - 2.23, h: 0, line: { color: col, width: 3 } });
+  T(s, wire, { x: WX + 2.2, y: y - 0.11, w: RX + 0.16 - WX - 2.2, h: 0.2, fontSize: 9, align: "center" });
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: RX + 0.1, y, w: 0.55, h: 0.3, rectRadius: 0.05, fill: { color: "FFFFFF" }, line: { color: "C7C7CC", width: 0.75 } });
+  T(s, rl, { x: RX + 0.1, y, w: 0.55, h: 0.3, fontSize: 10, bold: true, align: "center", valign: "middle" });
+  if (ch) {
+    s.addImage({ path: ICON(i === 2 ? "fan" : "mist", i === 2 ? "blue" : "ink"), x: RX + 0.7, y: y + 0.04, w: 0.22, h: 0.22, altText: ch });
+    T(s, ch, { x: RX + 0.95, y, w: 0.85, h: 0.3, fontSize: 9.5, bold: true, valign: "middle" });
+  }
+});
+s.addNotes("시연에 쓰는 기기와 연결임. 노트북은 가상 침실을 계산해 센서 대신 0.5초마다 USB로 DK에 값을 보내고, DK는 벽 표면 습도를 계산해 판단한 뒤 GPIO로 릴레이를 움직여 선풍기와 가습기 전원을 켜고 끔. 같은 결과는 Thread로 SmartThings Station에 Matter 보고되고, 앱에서 상태를 보고 조작할 수 있음. 실제 제품에서는 노트북 자리에 온습도 센서와 벽 온도 센서가 들어감. 릴레이는 LOW에서 켜지는 모듈이라 overlay에서 핀을 active-low로 정의했고, P1.22는 DK의 LED0 핀과 겹쳐 P1.21로 옮김.");
+
+/* ---------- 5. 시연 화면과 구동 순서 ---------- */
+s = pres.addSlide({ masterName: "CONTENT", sectionTitle: process.env.SKIP_SECTION ? undefined : "시연 내용" });
+s.addText("시연 내용 ② 시연 화면과 구동 순서", { placeholder: "label" });
+tracker(s, 2);
 s.addText("한파의 밤 10시간을 60초로 재현해 누적 위험 시간 0분을 달성함", { placeholder: "title" });
 const sw = 7.9, sh = Math.min(sw * SCENE_RATIO, 4.3);
 s.addImage({ path: SCENE, x: 0.6, y: 1.5, w: sh / SCENE_RATIO, h: sh, altText: "시연 화면: 가상 침실과 판단 노드" });
