@@ -57,7 +57,8 @@ const tableOpts = (x, y, w, colW, extra = {}) => Object.assign({ x, y, w, colW, 
 /* 아이콘 행: 원형 아이콘 + 굵은 제목 + 설명 */
 const iconRow = (slide, name, x, y, w, title, desc, o = {}) => {
   badge(slide, name, x, y, o.d || 0.46, o.fill);
-  T(slide, [{ text: title, options: { bold: true, breakLine: true } }, { text: desc, options: { fontSize: o.descSize || 13 } }],
+  const lines = Array.isArray(desc) ? desc : [desc];
+  T(slide, [{ text: title, options: { bold: true, breakLine: true } }, ...lines.map((l, k) => ({ text: l, options: { fontSize: o.descSize || 13, breakLine: k < lines.length - 1 } }))],
     { x: x + (o.d || 0.46) + 0.2, y: y - 0.04, w: w - (o.d || 0.46) - 0.2, h: o.h || 0.62, fontSize: o.size || 14 });
 };
 
@@ -259,15 +260,21 @@ s.addImage({ path: SCENE, x: 0.6, y: 1.5, w: sh / SCENE_RATIO, h: sh, altText: "
 T(s, "실제 보드를 연결한 03:00 화면. 실내와 벽 표면 습도, 노드의 판단, 가습기와 선풍기, 허브 보고를 한 화면에 보여줌",
   { x: 0.6, y: 1.5 + sh + 0.08, w: 7.9, h: 0.3, fontSize: 11 });
 
-const big = (ic, x, y, v, l, fill = C.accent1) => {
-  badge(s, ic, x, y + 0.08, 0.46, fill);
-  T(s, v, { x: x + 0.62, y, w: 3.5, h: 0.6, fontSize: 30, bold: true });
-  T(s, l, { x: x + 0.62, y: y + 0.6, w: 3.5, h: 0.3, fontSize: 12 });
-};
-big("shield", 8.85, 1.5, "0분", "누적 위험 시간, 우리 노드 (실제 보드)");
-big("alert", 8.85, 2.5, "8시간 38분", "같은 밤 일반 가습기(60% 목표)였다면", C.accent3);
-big("droplet", 8.85, 3.5, "78% / 119%", "최고 벽 표면 습도 (우리 노드 / 일반 가습기)");
-big("fan", 8.85, 4.5, "+2.8℃", "노드가 학습한 선풍기 효과");
+/* 구동 순서: ①~⑤를 0.5초마다 반복, ⑥ 결과 */
+const seq = [
+  ["laptop", "① 가상 침실", ["한파의 밤 10시간을 60초로 진행함", "가전 상태를 반영해 온습도와 벽 온도를 만듦"]],
+  ["upload", "② 센서값 전송", ["0.5초마다 USB로 DK에 보냄", "실제 제품에서는 센서가 이 값을 측정함"]],
+  ["cpu", "③ DK 판단", ["벽 표면 습도와 절대습도를 계산해", "가습기와 선풍기 ON/OFF를 결정함"]],
+  ["plug", "④ 릴레이 구동", ["CH1 선풍기, CH2 가습기 전원을 켜고 끔", "딸깍 소리와 함께 가전이 실제로 바뀜"]],
+  ["wave", "⑤ Matter 보고", ["같은 결과를 SmartThings 허브에 보고함", "11회 모두 수신 확인, 평균 92ms"]],
+  ["shield", "⑥ 결과: 누적 위험 시간", ["우리 노드 0분, 최고 벽 표면 78%", "일반 가습기였다면 8시간 38분, 최고 119%"]],
+];
+s.addShape(pres.shapes.LINE, { x: 9.06, y: 1.71, w: 0, h: 3.6, line: { color: HEX.hair, width: 1.5 } });
+/* ⑤ → ① 되돌아가는 점선 (닫힌 고리) */
+s.addShape(pres.shapes.LINE, { x: 8.64, y: 4.59, w: 0.21, h: 0, line: { color: "8E8E93", width: 1.5, dashType: "dash" } });
+s.addShape(pres.shapes.LINE, { x: 8.64, y: 1.71, w: 0, h: 2.88, line: { color: "8E8E93", width: 1.5, dashType: "dash" } });
+s.addShape(pres.shapes.LINE, { x: 8.64, y: 1.71, w: 0.21, h: 0, line: { color: "8E8E93", width: 1.5, dashType: "dash", endArrowType: "triangle" } });
+seq.forEach(([ic, h, d], i) => iconRow(s, ic, 8.85, 1.5 + i * 0.72, 3.9, h, d, { d: 0.42, h: 0.66, size: 13, descSize: 11.5 }));
 
 const tl = [["22:00", "건조 → 가습 시작"], ["01:00", "표면 75% → 가습 정지"], ["01:10", "선풍기 ON, 효과 학습"], ["02:55~", "선풍기 켠 채 가습"], ["07:25", "벽 회복 → 선풍기 OFF"]];
 s.addShape(pres.shapes.LINE, { x: 0.7, y: 6.36, w: 11.95, h: 0, line: { color: HEX.hair, width: 1.5 } });
@@ -276,7 +283,7 @@ tl.forEach(([t, d], i) => {
   s.addShape(pres.shapes.OVAL, { x, y: 6.27, w: 0.18, h: 0.18, fill: { color: C.accent1 }, line: { color: HEX.blue, width: 0 } });
   T(s, [{ text: t, options: { bold: true, breakLine: true } }, { text: d, options: {} }], { x, y: 6.5, w: 2.3, h: 0.5, fontSize: 12 });
 });
-s.addNotes("노트북 화면 하나로 시연함. 22시부터 08시까지를 60초로 압축함. 실내 습도는 40%대에 머무는데 벽 표면 습도만 올라가고, 75%에서 노드가 가습을 멈춘 뒤 선풍기로 벽을 데움. 그 순간 릴레이가 딸깍하고, 노드가 허브로 보고하는 것이 화면에 표시됨. 같은 밤 일반 가습기였다면 8시간 넘게 곰팡이 임계를 넘었을 것을 우리 노드는 0분으로 막음.");
+s.addNotes("시연은 오른쪽 순서로 동작함. 노트북의 가상 침실이 한파의 밤을 진행하며 0.5초마다 센서값을 DK로 보내고, DK가 벽 표면 습도를 계산해 릴레이로 가습기와 선풍기를 켜고 끄며, 같은 결과를 SmartThings 허브에 보고함. 바뀐 가전 상태는 다시 가상 침실에 반영됨. 실내 습도는 40%대에 머무는데 벽 표면 습도만 올라가고, 75%에서 노드가 가습을 멈춘 뒤 선풍기로 벽을 데움. 같은 밤 일반 가습기였다면 8시간 넘게 곰팡이 임계를 넘었을 것을 우리 노드는 0분으로 막음.");
 
 /* ---------- 수식 (OMML): PowerPoint 수식 개체. 변수는 기울임 Cambria Math, 한글 첨자는 Pretendard ---------- */
 const INK = `<a:solidFill><a:srgbClr val="000000"/></a:solidFill>`;
