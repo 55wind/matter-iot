@@ -5,7 +5,7 @@ const { applyTheme } = require(process.env.PPTX_SKILL + "/scripts/apply_theme.js
 
 const DIR = __dirname;
 const OUT = process.argv[2] || path.join(DIR, "deck.pptx");
-const SCENE = process.argv[3] || path.join(DIR, "scene_placeholder.png");
+const SCENE = process.argv[3] || path.join(DIR, "scene_board.png");
 const SCENE_RATIO = Number(process.argv[4] || 9 / 16);
 const PHONE = path.join(DIR, "phone_smartthings.png");
 const ICON = (n, c = "white") => path.join(DIR, "icons", `${n}-${c}.png`);
@@ -196,13 +196,13 @@ const stat = (ic, y, big, small) => {
   T(s, big, { x: 11.12, y, w: 1.55, h: 0.48, fontSize: 22, bold: true, color: C.accent1 });
   T(s, small, { x: 10.72, y: y + 0.5, w: 1.95, h: 0.5, fontSize: 11, color: C.text2 });
 };
-stat("wave", 1.75, "19 / 19", "허브 보고 / 수신 확인 (시연 1회)");
-stat("chart", 2.85, "91 ms", "보고 → 허브 응답");
+stat("wave", 1.75, "13 / 13", "허브 보고 / 수신 확인 (시연 1회)");
+stat("chart", 2.85, "92 ms", "보고 → 허브 응답 (평균)");
 stat("cpu", 3.95, "42%", "Flash 사용 (RAM 36%)");
 stat("db", 5.05, "v3.4.1", "nRF Connect SDK");
 T(s, "SmartThings 앱은 스위치와 센서가 섞인 기기에서 센서 엔드포인트를 표시하지 않아, EP2~EP4 값은 시연 화면에서 함께 보여줍니다.",
   { x: 8.75, y: 6.0, w: 3.85, h: 0.7, fontSize: 11, color: C.text2 });
-s.addNotes("SDK 예제 위에 엔드포인트를 직접 추가했습니다. 습도·온도는 표준 측정 클러스터로, 가습기와 선풍기는 On/Off로 노출합니다. 판단부가 속성을 설정하면 SDK가 허브로 ReportData를 보내고, 시연 1회 동안 19번 보고해 19번 모두 수신 확인을 받았습니다. 앱에서 직접 조작한 값은 콜백으로 받아 판단부에 반영합니다.");
+s.addNotes("SDK 예제 위에 엔드포인트를 직접 추가했습니다. 습도·온도는 표준 측정 클러스터로, 가습기와 선풍기는 On/Off로 노출합니다. 판단부가 속성을 설정하면 SDK가 허브로 ReportData를 보내고, 시연 1회 동안 13번 보고해 13번 모두 수신 확인을 받았고, 응답은 평균 92ms였습니다. 앱에서 직접 조작한 값은 콜백으로 받아 판단부에 반영합니다.");
 
 /* ---------- 4. 온디바이스 판단 ---------- */
 s = pres.addSlide({ masterName: "CONTENT", sectionTitle: process.env.SKIP_SECTION ? undefined : "주요 개발 내용" });
@@ -244,7 +244,7 @@ s.addText("시연 내용", { placeholder: "label" });
 s.addText("한파의 밤 10시간을 60초에: 누적 위험 시간 0분", { placeholder: "title" });
 const sw = 7.9, sh = Math.min(sw * SCENE_RATIO, 4.3);
 s.addImage({ path: SCENE, x: 0.6, y: 1.5, w: sh / SCENE_RATIO, h: sh, altText: "시연 화면: 가상 침실과 판단 노드" });
-T(s, "시연 화면 하나에 실내·벽 표면 습도, 노드의 판단, 가습기·선풍기, SmartThings 허브 보고가 함께 보입니다",
+T(s, "실제 보드를 연결한 03:00 화면 · 실내·벽 표면 습도, 노드의 판단, 가습기·선풍기, 허브 보고가 한 화면에",
   { x: 0.6, y: 1.5 + sh + 0.08, w: 7.9, h: 0.3, fontSize: 11, color: C.text2 });
 
 const big = (ic, x, y, v, l, color) => {
@@ -257,7 +257,7 @@ big("alert", 8.85, 2.5, "8시간 38분", "같은 밤 · 일반 가습기(60% 목
 big("droplet", 8.85, 3.5, "77% / 119%", "최고 벽 표면 습도 · 우리 노드 / 일반 가습기", C.text1);
 big("fan", 8.85, 4.5, "+2.8℃", "노드가 학습한 선풍기 효과", C.text1);
 
-const tl = [["22:00", "건조 → 가습 시작"], ["01:00", "표면 75% → 가습 정지"], ["01:05", "선풍기 ON · 효과 학습"], ["03:00~", "선풍기 켠 채 가습"], ["07:25", "벽 회복 → 선풍기 OFF"]];
+const tl = [["22:00", "건조 → 가습 시작"], ["01:05", "표면 75% → 가습 정지"], ["01:10", "선풍기 ON · 효과 학습"], ["02:45~", "선풍기 켠 채 가습"], ["07:25", "벽 회복 → 선풍기 OFF"]];
 s.addShape(pres.shapes.LINE, { x: 0.7, y: 6.36, w: 11.95, h: 0, line: { color: HEX.hair, width: 1.5 } });
 tl.forEach(([t, d], i) => {
   const x = 0.6 + i * 2.45;

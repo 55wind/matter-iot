@@ -11,4 +11,4 @@ NODE_PATH=$PWD/node_modules PPTX_SKILL=<pptx 스킬 경로> node build.js out.pp
 powershell -File render.ps1 -Pptx <절대경로\out.pptx> -OutDir <짧은 경로\render> -Pdf <절대경로\out.pdf>
 ```
 
-시연 화면 캡처는 두 번째 인자로 넘깁니다(기본값 `scene_placeholder.png`는 보드 미연결 상태 화면).
+시연 화면 캡처는 두 번째 인자로 넘깁니다. 기본값 `scene_board.png`는 실제 보드(COM3)를 연결해 한파의 밤을 돌린 03:00 화면이고, 5장의 수치와 타임라인도 같은 실행에서 나온 값입니다.
