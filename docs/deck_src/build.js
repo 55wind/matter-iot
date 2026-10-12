@@ -201,13 +201,13 @@ const stat = (ic, y, big, small) => {
   T(s, big, { x: 11.12, y, w: 1.55, h: 0.48, fontSize: 22, bold: true });
   T(s, small, { x: 10.72, y: y + 0.5, w: 1.95, h: 0.5, fontSize: 11 });
 };
-stat("wave", 1.75, "11 / 11", "허브 보고 / 수신 확인 (시연 1회)");
+stat("wave", 1.75, "12 / 12", "허브 보고 / 수신 확인 (시연 1회)");
 stat("chart", 2.85, "92 ms", "보고 후 허브 응답 (평균)");
 stat("cpu", 3.95, "42%", "Flash 사용 (RAM 36%)");
 stat("db", 5.05, "v3.4.1", "nRF Connect SDK");
 T(s, [{ text: "SmartThings 앱은 스위치와 센서가 섞인 기기에서", options: { breakLine: true } }, { text: "센서 엔드포인트를 표시하지 않음.", options: { breakLine: true } }, { text: "그래서 EP2~EP4 값은 시연 화면에서 함께 보여줌." }],
   { x: 8.75, y: 6.0, w: 3.85, h: 0.7, fontSize: 11 });
-s.addNotes("SDK 예제 위에 엔드포인트를 직접 추가함. 습도와 온도는 표준 측정 클러스터로, 가습기와 선풍기는 On/Off로 노출함. 판단부가 속성을 설정하면 SDK가 허브로 ReportData를 보내고, 시연 1회 동안 11번 보고해 11번 모두 수신 확인을 받았으며 응답은 평균 92ms였음. 앱에서 직접 조작한 값은 콜백으로 받아 판단부에 반영함.");
+s.addNotes("SDK 예제 위에 엔드포인트를 직접 추가함. 습도와 온도는 표준 측정 클러스터로, 가습기와 선풍기는 On/Off로 노출함. 판단부가 속성을 설정하면 SDK가 허브로 ReportData를 보내고, 시연 1회 동안 12번 보고해 12번 모두 수신 확인을 받았으며 응답은 평균 92ms였음. 앱에서 직접 조작한 값은 콜백으로 받아 판단부에 반영함.");
 
 /* ---------- 4. 온디바이스 판단 ---------- */
 s = pres.addSlide({ masterName: "CONTENT", sectionTitle: process.env.SKIP_SECTION ? undefined : "주요 개발 내용" });
@@ -266,8 +266,8 @@ const seq = [
   ["upload", "② 센서값 전송", ["0.5초마다 USB로 DK에 보냄", "실제 제품에서는 센서가 이 값을 측정함"]],
   ["cpu", "③ DK 판단", ["벽 표면 습도와 절대습도를 계산해", "가습기와 선풍기 ON/OFF를 결정함"]],
   ["plug", "④ 릴레이 구동", ["CH1 선풍기, CH2 가습기 전원을 켜고 끔", "딸깍 소리와 함께 가전이 실제로 바뀜"]],
-  ["wave", "⑤ Matter 보고", ["같은 결과를 SmartThings 허브에 보고함", "11회 모두 수신 확인, 평균 92ms"]],
-  ["shield", "⑥ 결과: 누적 위험 시간", ["우리 노드 0분, 최고 벽 표면 78%", "일반 가습기였다면 8시간 38분, 최고 119%"]],
+  ["wave", "⑤ Matter 보고", ["같은 결과를 SmartThings 허브에 보고함", "12회 모두 수신 확인, 평균 92ms"]],
+  ["shield", "⑥ 결과: 누적 위험 시간", ["우리 노드 0분, 최고 벽 표면 78%", "일반 가습기였다면 8시간 38분, 결로 6시간 14분"]],
 ];
 s.addShape(pres.shapes.LINE, { x: 9.06, y: 1.71, w: 0, h: 3.6, line: { color: HEX.hair, width: 1.5 } });
 /* ⑤ → ① 되돌아가는 점선 (닫힌 고리) */
@@ -276,14 +276,14 @@ s.addShape(pres.shapes.LINE, { x: 8.64, y: 1.71, w: 0, h: 2.88, line: { color: "
 s.addShape(pres.shapes.LINE, { x: 8.64, y: 1.71, w: 0.21, h: 0, line: { color: "8E8E93", width: 1.5, dashType: "dash", endArrowType: "triangle" } });
 seq.forEach(([ic, h, d], i) => iconRow(s, ic, 8.85, 1.5 + i * 0.72, 3.9, h, d, { d: 0.42, h: 0.66, size: 13, descSize: 11.5 }));
 
-const tl = [["22:00", "건조 → 가습 시작"], ["01:00", "표면 75% → 가습 정지"], ["01:10", "선풍기 ON, 효과 학습"], ["02:55~", "선풍기 켠 채 가습"], ["07:25", "벽 회복 → 선풍기 OFF"]];
+const tl = [["22:00", "건조 → 가습 시작"], ["01:00", "표면 75% → 가습 정지"], ["01:10", "선풍기 ON, 효과 학습"], ["02:55~", "선풍기 켠 채 가습"], ["07:30", "벽 회복 → 선풍기 OFF"]];
 s.addShape(pres.shapes.LINE, { x: 0.7, y: 6.36, w: 11.95, h: 0, line: { color: HEX.hair, width: 1.5 } });
 tl.forEach(([t, d], i) => {
   const x = 0.6 + i * 2.45;
   s.addShape(pres.shapes.OVAL, { x, y: 6.27, w: 0.18, h: 0.18, fill: { color: C.accent1 }, line: { color: HEX.blue, width: 0 } });
   T(s, [{ text: t, options: { bold: true, breakLine: true } }, { text: d, options: {} }], { x, y: 6.5, w: 2.3, h: 0.5, fontSize: 12 });
 });
-s.addNotes("시연은 오른쪽 순서로 동작함. 노트북의 가상 침실이 한파의 밤을 진행하며 0.5초마다 센서값을 DK로 보내고, DK가 벽 표면 습도를 계산해 릴레이로 가습기와 선풍기를 켜고 끄며, 같은 결과를 SmartThings 허브에 보고함. 바뀐 가전 상태는 다시 가상 침실에 반영됨. 실내 습도는 40%대에 머무는데 벽 표면 습도만 올라가고, 75%에서 노드가 가습을 멈춘 뒤 선풍기로 벽을 데움. 같은 밤 일반 가습기였다면 8시간 넘게 곰팡이 임계를 넘었을 것을 우리 노드는 0분으로 막음.");
+s.addNotes("시연은 오른쪽 순서로 동작함. 노트북의 가상 침실이 한파의 밤을 진행하며 0.5초마다 센서값을 DK로 보내고, DK가 벽 표면 습도를 계산해 릴레이로 가습기와 선풍기를 켜고 끄며, 같은 결과를 SmartThings 허브에 보고함. 바뀐 가전 상태는 다시 가상 침실에 반영됨. 실내 습도는 40%대에 머무는데 벽 표면 습도만 올라가고, 75%에서 노드가 가습을 멈춘 뒤 선풍기로 벽을 데움. 같은 밤 일반 가습기였다면 8시간 넘게 곰팡이 임계를 넘고, 그중 6시간 넘게 벽이 이슬점(12.9℃)보다 차가워 결로가 생겼을 것을 우리 노드는 0분으로 막음.");
 
 /* ---------- 수식 (OMML): PowerPoint 수식 개체. 변수는 기울임 Cambria Math, 한글 첨자는 Pretendard ---------- */
 const INK = `<a:solidFill><a:srgbClr val="000000"/></a:solidFill>`;

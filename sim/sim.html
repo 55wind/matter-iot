@@ -173,7 +173,7 @@ main { flex: 1; min-height: 0; position: relative; overflow: hidden; }
   <text x="44" y="836" class="cap" font-size="18">일반 가습기 60%</text><text id="v-crisk" x="330" y="838" text-anchor="end" fill="#ff453a" font-size="28" font-weight="600">0분</text>
   <text x="44" y="870" class="cap" font-size="16">임계까지 예측</text><text id="v-eta" x="330" y="870" text-anchor="end" fill="#fff" font-size="17" font-weight="600">--</text>
   <g class="lbl" font-size="13" text-anchor="end">
-    <text x="372" y="746">120%</text><text x="372" y="794">80%</text><text x="372" y="842">40%</text>
+    <text x="372" y="770">100%</text><text x="372" y="794">80%</text><text x="372" y="842">40%</text>
   </g>
   <g stroke="#3a3a3c" stroke-width="1"><line x1="380" y1="742" x2="1480" y2="742"/><line x1="380" y1="838" x2="1480" y2="838"/><line x1="380" y1="862" x2="1480" y2="862"/></g>
   <g id="c-fan" fill="#2997ff" fill-opacity=".14"></g>
@@ -364,12 +364,12 @@ const minText = m => m < 60 ? `${Math.round(m)}분` : `${Math.floor(m / 60)}시�
 const surfColor = s => s >= 80 ? '#ff453a' : s >= 75 ? '#ff9f0a' : s >= 70 ? '#ffd60a' : s >= 60 ? '#64d2ff' : '#5e8fb3';
 const srhColor = s => s >= 80 ? '#ff453a' : s >= 75 ? '#ff9f0a' : '#2997ff';
 const BX = p => 384 + 634 * (Math.min(Math.max(p, 20), 70) - 20) / 50;
-const CX = m => 380 + 1100 * m / P.END, CY = p => 862 - (Math.min(Math.max(p, 20), 120) - 20) * 1.2;
+const CX = m => 380 + 1100 * m / P.END, CY = p => 862 - (Math.min(Math.max(p, 20), 100) - 20) * 1.2; /* 100% 위는 결로: 물로 맺혀 100%에 머묾 */
 
 /* 그래프 선 끝에 이름표 (범례 대신) */
 function labelLines() {
   const last = hist[hist.length - 1];
-  const items = [['cl-cmp', '일반 가습기', last && last.csrh], ['cl-srh', '벽 표면', last && last.srh], ['cl-rh', '실내', last && last.rh]];
+  const items = [['cl-cmp', last && last.csrh >= 100 ? '일반 가습기: 결로' : '일반 가습기', last && last.csrh], ['cl-srh', '벽 표면', last && last.srh], ['cl-rh', '실내', last && last.rh]];
   if (!last) { items.forEach(([id]) => { $(id).textContent = ''; }); return; }
   const x = CX(last.t) + 8;
   const ys = items.map(([, , v]) => CY(v) + 5).sort((a, b) => a - b);
