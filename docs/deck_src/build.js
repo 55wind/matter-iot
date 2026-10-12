@@ -212,35 +212,42 @@ s.addNotes("SDK 예제 위에 엔드포인트를 직접 추가함. 습도와 온
 s = pres.addSlide({ masterName: "CONTENT", sectionTitle: process.env.SKIP_SECTION ? undefined : "주요 개발 내용" });
 s.addText("주요 개발 내용 ③ 온디바이스 판단", { placeholder: "label" });
 s.addText("노드가 스스로 계산하고 학습하고 개입함", { placeholder: "title" });
-card(s, 0.6, 1.5, 4.6, 5.3);
+card(s, 0.6, 1.5, 6.55, 5.3);
 badge(s, "calc", 0.85, 1.72, 0.42);
-T(s, "계산 (0.5초마다)", { x: 1.42, y: 1.78, w: 3.5, h: 0.35, fontSize: 16, bold: true });
-/* 수식: 상자에는 일반 글자(대체 표시)를 넣고, injectMath가 같은 상자에 수식 개체를 겹쳐 씀 */
-const eq = [
-  ["포화 수증기압 (Magnus 식, hPa)", "Pₛ(T) = 6.112 × exp(17.62T / (243.12 + T))"],
-  ["벽 표면 상대습도", "RH표면 = RH실내 × Pₛ(T실내) / Pₛ(T벽)"],
-  ["절대습도 (g/㎥)", "AH = 216.7 × RH × Pₛ(T) / (100 × (273.15 + T))"],
-  ["허용 상한 (표 3)", "RH상한 = 80 × Pₛ(T벽) / Pₛ(T실내)"],
+T(s, "계산: 차가운 벽 앞 공기의 습도를 구함", { x: 1.42, y: 1.68, w: 5.5, h: 0.3, fontSize: 16, bold: true });
+T(s, "DK가 0.5초마다 직접 계산함, 클라우드 불필요", { x: 1.42, y: 1.99, w: 5.5, h: 0.24, fontSize: 11.5 });
+/* 수식 자리: 상자에는 대체 글자를 넣고, finish()가 PowerPoint 수식 개체로 바꿈 (eq*: 수식만, mx_*: 글자와 수식이 섞인 줄) */
+T(s, "T실내 방 온도, T벽 벽 표면 온도, RH 상대습도(%), Pₛ 포화 수증기압(hPa)", { x: 0.85, y: 2.36, w: 6.1, h: 0.34, fontSize: 11.5, valign: "middle", objectName: "mx_lg" });
+s.addShape(pres.shapes.LINE, { x: 0.85, y: 2.8, w: 6.05, h: 0, line: { color: HEX.hair, width: 0.75 } });
+const calc = [
+  ["① 포화 수증기압", ["온도별로 공기가 품을 수 있는", "수증기의 최대치임"], "Pₛ(T) = 6.112 exp(17.62T / (243.12 + T))"],
+  ["② 벽 표면 상대습도", ["방 공기가 벽 온도로", "식었을 때의 습도임"], "RH표면 = RH실내 × Pₛ(T실내) / Pₛ(T벽)"],
+  ["③ 절대습도 (g/㎥)", ["공기 1㎥에 든 수증기 양,", "점막 방어의 기준임"], "AH = 216.7 × RH × Pₛ(T) / (100 (273.15 + T))"],
+  ["④ 허용 상한 (표 3)", ["벽 표면이 80%를 넘지 않는", "실내 습도의 최댓값임"], "RH상한 = 80 × Pₛ(T벽) / Pₛ(T실내)"],
 ];
-eq.forEach(([k, v], i) => {
-  T(s, k, { x: 0.85, y: 2.25 + i * 0.95, w: 4.1, h: 0.28, fontSize: 13 });
-  T(s, v, { x: 0.85, y: 2.52 + i * 0.95, w: 4.1, h: 0.58, fontSize: 15, valign: "middle", objectName: `eq${i}` });
+calc.forEach(([h, d, f], i) => {
+  const y = 2.9 + i * 0.82;
+  T(s, [{ text: h, options: { bold: true, breakLine: true } }, { text: d[0], options: { fontSize: 11.5, breakLine: true } }, { text: d[1], options: { fontSize: 11.5 } }], { x: 0.85, y, w: 2.55, h: 0.74, fontSize: 13, valign: "middle" });
+  T(s, f, { x: 3.5, y, w: 3.5, h: 0.74, fontSize: 15, valign: "middle", objectName: `eq${i}` });
 });
-s.addImage({ path: ICON("cloudoff", "blue"), x: 0.85, y: 6.15, w: 0.34, h: 0.34, altText: "클라우드 불필요" });
-T(s, [{ text: "판단, 학습, 예측을 모두 DK 안에서 처리함.", options: { breakLine: true } }, { text: "Wi-Fi나 클라우드가 끊겨도 방어가 계속됨." }], { x: 1.3, y: 6.1, w: 3.7, h: 0.65, fontSize: 12 });
+/* 예시: 1장의 45% → 80% */
+s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 0.8, y: 6.17, w: 6.15, h: 0.56, rectRadius: 0.08, fill: { color: "FFFFFF" }, line: { color: HEX.hair, width: 0.75 } });
+T(s, [{ text: "예) 방 21℃, 45%이고", options: { breakLine: true } }, { text: "벽이 12℃이면" }], { x: 0.95, y: 6.17, w: 2.45, h: 0.56, fontSize: 12, valign: "middle" });
+T(s, "RH표면 = 45 × 24.8 / 14.0 ≈ 80%", { x: 3.5, y: 6.17, w: 3.4, h: 0.56, fontSize: 14, valign: "middle", objectName: "eq4" });
 
+T(s, "판단 규칙", { x: 7.45, y: 1.5, w: 5.3, h: 0.32, fontSize: 15, bold: true });
 const rules = [
-  ["shield", "A 곰팡이 방어", "벽 표면 75%에서 가습을 멈추고 70% 미만에서만 재개함 (임계 80%에 여유 5%p)"],
-  ["droplet", "B 점막 방어", "절대습도 6.5 g/㎥ 미만이면 가습하고 8 g/㎥에서 정지함"],
-  ["fan", "선풍기 개입", "가습을 멈춰도 75% 이상이면 0.5초 뒤 선풍기를 켜 벽 표면을 데움"],
-  ["brain", "E 학습", "선풍기를 켠 뒤 벽 표면 상승폭을 재고(시연 +2.8℃) 끄는 시점을 판단함"],
-  ["chart", "E 예측", "벽 표면 온도 추세로 임계 80% 도달까지 남은 시간을 계산함"],
-  ["join", "동시 가동", "선풍기로 넓힌 구간 안에서 선풍기를 켠 채 가습을 재개함 (②, ③ 동시 충족)"],
-  ["user", "사용자 우선", "앱과 버튼 조작은 30분간 존중하고, 벽 표면 80%를 넘으면 방어를 우선함"],
-  ["history", "기록", "벽 표면 80% 이상이었던 시간을 누적 위험 시간으로 기록함"],
+  ["shield", "A 곰팡이 방어", "벽 표면 75%에서 가습 정지, 70% 미만에서만 재개함"],
+  ["droplet", "B 점막 방어", "절대습도 6.5 g/㎥ 미만이면 가습, 8 g/㎥에서 정지함"],
+  ["fan", "선풍기 개입", "가습을 멈춰도 75% 이상이면 선풍기로 벽 표면을 데움"],
+  ["brain", "E 학습", "선풍기 효과(시연 +2.8℃)를 재서 끄는 시점을 판단함"],
+  ["chart", "E 예측", "벽 온도 추세로 임계 80%까지 남은 시간을 계산함"],
+  ["join", "동시 가동", "선풍기로 넓힌 구간에서 켠 채 가습해 ②, ③을 함께 지킴"],
+  ["user", "사용자 우선", "앱 조작은 30분 존중, 벽 표면 80%를 넘으면 방어를 우선함"],
+  ["history", "기록", "벽 표면 80% 이상인 시간을 누적 위험 시간으로 기록함"],
 ];
-rules.forEach(([ic, h, d], i) => iconRow(s, ic, 5.55, 1.5 + i * 0.66, 7.2, h, d, { d: 0.42, h: 0.62, size: 14, descSize: 13 }));
-s.addNotes("노드는 0.5초마다 표면 습도와 절대습도를 계산함. 75%에서 가습을 멈추고, 그래도 오르면 선풍기를 켬. 선풍기를 켤 때 벽이 몇 도 오르는지 스스로 재서, 선풍기를 꺼도 안전한지를 판단함. 선풍기로 허용 구간을 넓힌 뒤에는 선풍기를 켠 채로 가습을 이어가 점막 방어와 곰팡이 방어를 동시에 지킴.");
+rules.forEach(([ic, h, d], i) => iconRow(s, ic, 7.45, 1.98 + i * 0.6, 5.3, h, d, { d: 0.4, h: 0.56, size: 13, descSize: 12 }));
+s.addNotes("노드는 0.5초마다 벽 표면 습도와 절대습도를 계산함. 예를 들어 방이 21℃, 45%이고 벽이 12℃이면 벽 표면 습도는 약 80%로 곰팡이 임계에 닿음. 75%에서 가습을 멈추고, 그래도 오르면 선풍기를 켬. 선풍기를 켤 때 벽이 몇 도 오르는지 스스로 재서, 선풍기를 꺼도 안전한지를 판단함. 선풍기로 허용 구간을 넓힌 뒤에는 선풍기를 켠 채로 가습을 이어가 점막 방어와 곰팡이 방어를 동시에 지킴.");
 
 /* ---------- 5. 시연 내용 ---------- */
 if (!process.env.SKIP_SECTION) pres.addSection({ title: "시연 내용" });
@@ -271,29 +278,47 @@ tl.forEach(([t, d], i) => {
 });
 s.addNotes("노트북 화면 하나로 시연함. 22시부터 08시까지를 60초로 압축함. 실내 습도는 40%대에 머무는데 벽 표면 습도만 올라가고, 75%에서 노드가 가습을 멈춘 뒤 선풍기로 벽을 데움. 그 순간 릴레이가 딸깍하고, 노드가 허브로 보고하는 것이 화면에 표시됨. 같은 밤 일반 가습기였다면 8시간 넘게 곰팡이 임계를 넘었을 것을 우리 노드는 0분으로 막음.");
 
-/* ---------- 수식 (OMML) ---------- */
-const RPR = `<a:rPr lang="ko-KR" altLang="en-US" sz="1500" b="0" i="0"><a:solidFill><a:srgbClr val="000000"/></a:solidFill><a:latin typeface="${FONT}"/><a:ea typeface="${FONT}"/></a:rPr>`;
-const ctrl = `<m:ctrlPr>${RPR}</m:ctrlPr>`;
-const r = (t) => `<m:r><m:rPr><m:nor/></m:rPr>${RPR}<m:t xml:space="preserve">${t}</m:t></m:r>`;
-const op = (o) => r(` ${o} `);
+/* ---------- 수식 (OMML): PowerPoint 수식 개체. 변수는 기울임 Cambria Math, 한글 첨자는 Pretendard ---------- */
+const INK = `<a:solidFill><a:srgbClr val="000000"/></a:solidFill>`;
+const CM = `<a:latin typeface="Cambria Math" panose="02040503050406030204" pitchFamily="18" charset="0"/>`;
+const rpr = (i) => `<a:rPr lang="en-US" sz="@SZ@" b="0" i="${i}">${INK}${CM}</a:rPr>`;
+const RPR_K = `<a:rPr lang="ko-KR" altLang="en-US" sz="@SZ@" b="0" i="0">${INK}<a:latin typeface="${FONT}"/><a:ea typeface="${FONT}"/></a:rPr>`;
+const ctrl = `<m:ctrlPr>${rpr(1)}</m:ctrlPr>`;
+const mi = (t) => `<m:r>${rpr(1)}<m:t>${t}</m:t></m:r>`; // 변수: 기울임
+const mp = (t) => `<m:r><m:rPr><m:sty m:val="p"/></m:rPr>${rpr(0)}<m:t>${t}</m:t></m:r>`; // 숫자, 기호, 약어: 바로 선 글자
+const mk = (t) => `<m:r><m:rPr><m:nor/></m:rPr>${RPR_K}<m:t>${t}</m:t></m:r>`; // 한글 첨자
 const sub = (e, x) => `<m:sSub><m:sSubPr>${ctrl}</m:sSubPr><m:e>${e}</m:e><m:sub>${x}</m:sub></m:sSub>`;
 const frac = (n, d) => `<m:f><m:fPr>${ctrl}</m:fPr><m:num>${n}</m:num><m:den>${d}</m:den></m:f>`;
 const paren = (e) => `<m:d><m:dPr>${ctrl}</m:dPr><m:e>${e}</m:e></m:d>`;
-const func = (name, e) => `<m:func><m:funcPr>${ctrl}</m:funcPr><m:fName>${r(name)}</m:fName><m:e>${e}</m:e></m:func>`;
-const Ps = (x) => sub(r("P"), r("s")) + r("(") + x + r(")");
-const Tsub = (k) => sub(r("T"), r(k));
-const EQS = [
-  Ps(r("T")) + op("=") + r("6.112") + r(" ×") + func("exp", paren(frac(r("17.62T"), r("243.12") + op("+") + r("T")))),
-  sub(r("RH"), r("표면")) + op("=") + sub(r("RH"), r("실내")) + op("×") + frac(Ps(Tsub("실내")), Ps(Tsub("벽"))),
-  r("AH") + op("=") + frac(r("216.7") + op("×") + r("RH") + op("×") + Ps(r("T")), r("100") + op("×") + r("(273.15") + op("+") + r("T)")),
-  sub(r("RH"), r("상한")) + op("=") + r("80") + op("×") + frac(Ps(Tsub("벽")), Ps(Tsub("실내"))),
-];
+const func = (name, e) => `<m:func><m:funcPr>${ctrl}</m:funcPr><m:fName>${mp(name)}</m:fName><m:e>${e}</m:e></m:func>`;
+const Ps = (x) => sub(mi("P"), mp("s")) + mp("(") + x + mp(")");
+const Tk = (k) => sub(mi("T"), mk(k));
+const RHk = (k) => sub(mp("RH"), mk(k));
+/* 수식만 있는 상자 */
+const DISPLAY = {
+  eq0: Ps(mi("T")) + mp("=") + mp("6.112") + func("exp", paren(frac(mp("17.62") + mi("T"), mp("243.12") + mp("+") + mi("T")))),
+  eq1: RHk("표면") + mp("=") + RHk("실내") + mp("×") + frac(Ps(Tk("실내")), Ps(Tk("벽"))),
+  eq2: mp("AH") + mp("=") + frac(mp("216.7") + mp("×") + mp("RH") + mp("×") + Ps(mi("T")), mp("100") + paren(mp("273.15") + mp("+") + mi("T"))),
+  eq3: RHk("상한") + mp("=") + mp("80") + mp("×") + frac(Ps(Tk("벽")), Ps(Tk("실내"))),
+  eq4: RHk("표면") + mp("=") + mp("45") + mp("×") + frac(mp("24.8"), mp("14.0")) + mp("≈") + mp("80") + mp("%"),
+};
+/* 글자 사이에 수식이 들어가는 줄: ["t", 글자] | ["m", 수식] */
+const INLINE = {
+  mx_lg: [["m", Tk("실내")], ["t", " 방 온도,   "], ["m", Tk("벽")], ["t", " 벽 표면 온도,   "], ["m", mp("RH")], ["t", " 상대습도(%),   "], ["m", sub(mi("P"), mp("s"))], ["t", " 포화 수증기압(hPa)"]],
+};
 const NS_M = "http://schemas.openxmlformats.org/officeDocument/2006/math";
 const NS_A14 = "http://schemas.microsoft.com/office/drawing/2010/main";
 const NS_MC = "http://schemas.openxmlformats.org/markup-compatibility/2006";
 /* 상자 하나를 [수식 개체 | 대체: 일반 글자] 로 바꿈 */
-const mathShape = (sp, omml) => {
-  const choice = sp.replace(/<a:p>[\s\S]*<\/a:p>/, `<a:p><a14:m><m:oMathPara xmlns:m="${NS_M}"><m:oMathParaPr><m:jc m:val="left"/></m:oMathParaPr><m:oMath>${omml}</m:oMath></m:oMathPara></a14:m><a:endParaRPr lang="ko-KR" sz="1500"/></a:p>`);
+const mathShape = (sp, key) => {
+  const sz = (sp.match(/<a:rPr[^>]* sz="(\d+)"/) || [])[1] || "1400";
+  const pPr = (sp.match(/<a:pPr[^>]*\/>|<a:pPr[^>]*>[\s\S]*?<\/a:pPr>/) || [""])[0];
+  const body = DISPLAY[key]
+    ? `<a14:m><m:oMathPara xmlns:m="${NS_M}"><m:oMathParaPr><m:jc m:val="left"/></m:oMathParaPr><m:oMath>${DISPLAY[key]}</m:oMath></m:oMathPara></a14:m>`
+    : INLINE[key].map(([k, v]) => (k === "m"
+      ? `<a14:m><m:oMath xmlns:m="${NS_M}">${v}</m:oMath></a14:m>`
+      : `<a:r><a:rPr lang="ko-KR" altLang="en-US" sz="${sz}" dirty="0">${INK}</a:rPr><a:t>${v}</a:t></a:r>`)).join("");
+  const choice = sp.replace(/<a:p>[\s\S]*<\/a:p>/, `<a:p>${pPr}${body.replace(/@SZ@/g, sz)}<a:endParaRPr lang="ko-KR" sz="${sz}"/></a:p>`);
   return `<mc:AlternateContent xmlns:mc="${NS_MC}"><mc:Choice xmlns:a14="${NS_A14}" Requires="a14">${choice}</mc:Choice><mc:Fallback>${sp}</mc:Fallback></mc:AlternateContent>`;
 };
 async function finish(file) {
@@ -305,18 +330,19 @@ async function finish(file) {
       .replace(/<a:font script="Hang" typeface="[^"]*"\/>/g, `<a:font script="Hang" typeface="${FONT}"/>`);
     zip.file(name, xml);
   }
+  const want = Object.keys(DISPLAY).length + Object.keys(INLINE).length;
   let n = 0;
   for (const name of Object.keys(zip.files).filter((f) => /^ppt\/slides\/slide\d+\.xml$/.test(f))) {
     const xml = await zip.file(name).async("string");
     const out = xml.replace(/<p:sp>(?:(?!<p:sp>)[\s\S])*?<\/p:sp>/g, (sp) => {
-      const m = sp.match(/<p:cNvPr id="\d+" name="eq(\d)"/);
+      const m = sp.match(/<p:cNvPr id="\d+" name="(eq\d|mx_\w+)"/);
       if (!m) return sp;
       n++;
-      return mathShape(sp, EQS[+m[1]]);
+      return mathShape(sp, m[1]);
     });
     if (out !== xml) zip.file(name, out);
   }
-  if (n !== EQS.length) throw new Error(`수식 ${n}/${EQS.length}개만 삽입됨`);
+  if (n !== want) throw new Error(`수식 ${n}/${want}개만 삽입됨`);
   fs.writeFileSync(file, await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" }));
 }
 
