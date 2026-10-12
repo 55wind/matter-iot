@@ -9,6 +9,9 @@ struct node_status {
 	float band_lo, band_hi, band_hi_nf;   /* 표 3 허용 실내 습도 구간 (선풍기 효과 포함 / 없을 때) */
 	float crit_wall, eta_min, risk_min;   /* 임계 벽 온도, 임계 도달 예측(분), 누적 위험 시간(분) */
 	float fan_gain;                       /* 학습한 선풍기 효과 (벽 표면 +℃) */
+	float bed_rate;                       /* 침구 습도 변화율 (%p/분) */
+	int phase;                            /* D 국면: 0 대기, 1 취침, 2 기상 */
+	bool drying;                          /* C 침구 건조 중 */
 	bool humid, fan;
 };
 extern struct inputs g_in;

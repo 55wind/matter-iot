@@ -127,6 +127,9 @@ main { flex: 1; min-height: 0; position: relative; overflow: hidden; }
   <rect x="1000" y="610" width="560" height="90" rx="8" fill="#2c2c2e"/>
   <rect x="1008" y="586" width="544" height="32" rx="12" fill="#3a3a3c"/>
   <rect x="1460" y="566" width="82" height="28" rx="12" fill="#48484a"/>
+  <g id="sleeper" opacity="0"><circle cx="1500" cy="574" r="17" fill="#8e8e93"/><rect x="1180" y="590" width="300" height="26" rx="13" fill="#636366"/></g>
+  <text id="v-bed" x="1030" y="656" fill="#fff" font-size="24" font-weight="600">침구 습도 --%</text>
+  <text id="v-phase" x="1030" y="686" fill="#aeaeb2" font-size="16">침구 센서로 취침과 기상을 판정</text>
 
   <!-- 판단 노드 + Matter 링크 -->
   <path id="m-link" d="M 970 404 V 386 Q 970 380 976 380 H 1050 Q 1056 380 1056 374 V 182 Q 1056 176 1062 176 H 1070" fill="none" stroke="#2997ff" stroke-opacity=".55" stroke-width="2.5" stroke-dasharray="5 9"/>
@@ -197,7 +200,8 @@ const $ = id => document.getElementById(id);
 
 /* ---------- 가상 침실 (센서와 가전의 물리적 효과를 대신함) ---------- */
 const P = { T_IN: 21, F0: 0.316, G_FAN: 1 / 3, TAU_WALL: 60, TAU_FAN: 0.5,
-            AH_OUT: 2.5, TAU_VENT: 150, S_OCC: 0.015, G_HUM: 0.06, END: 600 };
+            AH_OUT: 2.5, TAU_VENT: 150, S_OCC: 0.015, G_HUM: 0.06, END: 600,
+            BED_IN: 30, BED_OUT: 570, BED_RISE: 32, TAU_BED: 40, TAU_BED_FAN: 15 }; /* 22:30 취침, 07:30 기상 */
 const OUT_KEYS = [[0, 2], [150, -8], [300, -14], [420, -12], [510, 0], [600, 10]];
 const psat = t => 6.112 * Math.exp(17.62 * t / (243.12 + t));
 const rhFromAh = (ah, t) => ah * (273.15 + t) / 216.7 / psat(t) * 100;
@@ -212,10 +216,11 @@ function tOut(m) {
 let room, cmp, hist, running = false;
 function resetRoom() {
   const ws0 = P.T_IN - P.F0 * (P.T_IN - tOut(0));
-  room = { t: 0, ws0, phi: 0, ah: ahFromRh(35, P.T_IN) };
+  room = { t: 0, ws0, phi: 0, ah: ahFromRh(35, P.T_IN), bed: 35 };
   cmp = { ws0, ah: room.ah, h: false, risk: 0 };
   hist = [];
 }
+const inBed = () => room.t >= P.BED_IN && room.t < P.BED_OUT;
 const wallT = () => room.ws0 + room.phi * P.G_FAN * (P.T_IN - room.ws0);
 const cmpSrh = () => rhFromAh(cmp.ah, P.T_IN) * psat(P.T_IN) / psat(cmp.ws0);
 function advance(minutes, humid, fan) {
@@ -225,6 +230,9 @@ function advance(minutes, humid, fan) {
     room.ws0 += (teq - room.ws0) / P.TAU_WALL * dt;
     room.phi = Math.min(1, Math.max(0, room.phi + ((fan ? 1 : 0) - room.phi) / P.TAU_FAN * dt));
     room.ah += (P.G_HUM * humid + P.S_OCC - (room.ah - P.AH_OUT) / P.TAU_VENT) * dt;
+    /* 침구: 누워 있으면 몸의 습기로 오르고, 일어나면 실내 습도로 마름 (선풍기면 더 빨리) */
+    const occ = inBed(), rhNow = rhFromAh(room.ah, P.T_IN);
+    room.bed += ((occ ? Math.min(85, rhNow + P.BED_RISE) : rhNow) - room.bed) / (!occ && fan ? P.TAU_BED_FAN : P.TAU_BED) * dt;
     /* 비교용: 실내 60%만 맞추는 일반 가습기, 선풍기 없음 */
     cmp.ws0 += (teq - cmp.ws0) / P.TAU_WALL * dt;
     cmp.h = rhFromAh(cmp.ah, P.T_IN) < 60;
@@ -236,8 +244,8 @@ function advance(minutes, humid, fan) {
 
 /* ---------- 보드 미연결일 때만 쓰는 같은 판단 로직 (decision.c와 동일) ---------- */
 const local = {};
-function resetLocal() { Object.assign(local, { h: false, f: false, meas: false, gain: 0, last: -1, fanOnT: 0, wallBefore: 0, risk: 0, prev: null, prevWnf: 0, slope: 0 }); }
-function localStep(t, rt, rh, wt) {
+function resetLocal() { Object.assign(local, { h: false, f: false, meas: false, gain: 0, last: -1, fanOnT: 0, wallBefore: 0, risk: 0, prev: null, prevWnf: 0, slope: 0, ph: 0, dry: false, dryT: 0, bedRate: 0, prevBed: null }); }
+function localStep(t, rt, rh, wt, bed) {
   const L = local, dt = L.prev === null || t < L.prev ? 0 : t - L.prev;
   const evt = why => onEvt(`EVT t=${t.toFixed(1)} humid=${+L.h} fan=${+L.f} why=${why}`);
   if (L.f && L.meas && t - L.fanOnT >= 3 && (wt - L.wallBefore >= 0.5 || t - L.fanOnT >= 15)) {
@@ -250,21 +258,29 @@ function localStep(t, rt, rh, wt) {
   const lg = Math.log(rh / 80 * psat(rt) / 6.112), crit = 243.12 * lg / (17.62 - lg);
   const eta = wnf <= crit ? 0 : L.slope < -0.001 ? (wnf - crit) / -L.slope : -1;
   if (srh >= 80) L.risk += dt;
+  /* D 국면 판정 */
+  if (dt > 0 && L.prevBed !== null) L.bedRate = 0.5 * L.bedRate + 0.5 * (bed - L.prevBed) / dt;
+  L.prevBed = bed;
+  if (L.ph !== 1 && L.bedRate >= 0.3 && bed >= rh + 5) { L.ph = 1; onEvt(`EVT t=${t.toFixed(1)} phase=1 why=bed_rise sleep`); }
+  else if (L.ph === 1 && L.bedRate <= -0.3) { L.ph = 2; onEvt(`EVT t=${t.toFixed(1)} phase=2 why=bed_fall wake`); }
+  const bedWet = L.ph === 2 && bed >= 60;
   const held = t - L.last >= 1;
   const srhTgtNf = Math.max(rh, rhFromAh(8, rt)) * psat(rt) / psat(wnf);
   const set = (h, f, why) => { L.h = h; L.f = f; L.last = t; evt(why); };
   if (L.h && srh >= 75) set(false, L.f, 'srh>=75 humid_off');
   else if (!L.f && srh >= 75) { L.fanOnT = t; L.wallBefore = wt; L.meas = true; set(L.h, true, 'srh>=75 fan_on'); }
-  else if (L.f && !L.meas && held && srhTgtNf < 70) set(L.h, false, 'srh_nofan<70 fan_off');
-  else if (!L.h && held && ah < 6.5 && srh < 70) set(true, L.f, L.f ? 'ah<6.5 humid_on band_by_fan' : 'ah<6.5 humid_on');
+  else if (!L.dry && bedWet) { L.dry = true; L.dryT = t; if (!L.f) set(L.h, true, 'bed>=60 dry_on'); else onEvt(`EVT t=${t.toFixed(1)} why=bed>=60 dry_keep`); }
+  else if (L.dry && (bed < 50 || t - L.dryT >= 45)) { L.dry = false; if (L.f && !L.meas && srhTgtNf < 70) set(L.h, false, 'bed<50 dry_off'); else onEvt(`EVT t=${t.toFixed(1)} why=bed<50 dry_done`); }
+  else if (L.f && !L.meas && held && !L.dry && srhTgtNf < 70) set(L.h, false, 'srh_nofan<70 fan_off');
+  else if (!L.h && held && !L.dry && ah < 6.5 && srh < 70) set(true, L.f, L.f ? 'ah<6.5 humid_on band_by_fan' : 'ah<6.5 humid_on');
   else if (L.h && ah >= 8) set(false, L.f, 'ah>=8 humid_off');
   const hi = w => 80 * psat(w) / psat(rt);
-  return { t, rh, wt, srh, ah, humid: +L.h, fan: +L.f, lo: rhFromAh(6, rt), hi: hi(wt), hinf: hi(wnf), eta, risk: L.risk, gain: L.gain };
+  return { t, rh, wt, srh, ah, humid: +L.h, fan: +L.f, lo: rhFromAh(6, rt), hi: hi(wt), hinf: hi(wnf), eta, risk: L.risk, gain: L.gain, bed, ph: L.ph, dry: +L.dry };
 }
 
 /* ---------- 보드 연결 (Web Serial) ---------- */
 let port, writer, dk = false, lastVal = null;
-const VAL_KEYS = ['t', 'rh', 'wt', 'srh', 'ah', 'humid', 'fan', 'lo', 'hi', 'hinf', 'eta', 'risk', 'gain'];
+const VAL_KEYS = ['t', 'rh', 'wt', 'srh', 'ah', 'humid', 'fan', 'lo', 'hi', 'hinf', 'eta', 'risk', 'gain', 'bed', 'ph', 'dry'];
 const matter = { reports: 0, acks: 0, txMs: null, latency: null, lastAck: null, cmds: 0 };
 function send(line) { if (writer) writer.write(new TextEncoder().encode(line + '\r')); }
 $('conn').onclick = async () => {
@@ -336,6 +352,12 @@ const REASONS = [
   ['ah<6.5 humid_on', '절대습도 부족 → 가습 시작', 'humid'],
   ['ah>=8 humid_off', '절대습도 충분 → 가습 정지', 'humid'],
   ['app_manual', '앱 조작 → 30분 사용자 우선', 'app'],
+  ['bed_rise sleep', '침구 습도 상승 → 취침 감지', 'app'],
+  ['bed_fall wake', '침구 습도 하강 → 기상 감지', 'app'],
+  ['bed>=60 dry_on', '침구 60% 이상 → 선풍기로 침구 건조', 'fan'],
+  ['bed>=60 dry_keep', '침구 60% 이상 → 선풍기 유지해 침구 건조', 'fan'],
+  ['bed<50 dry_off', '침구 50% 미만 → 건조 끝, 선풍기 정지', 'fan'],
+  ['bed<50 dry_done', '침구 50% 미만 → 침구 건조 끝', 'fan'],
 ];
 const decisions = [];
 function onEvt(e) {
@@ -397,6 +419,12 @@ function render(v) {
   $('r-surf').setAttribute('fill', surfColor(v.srh));
   $('drops').setAttribute('opacity', v.srh >= 95 ? 1 : 0);
 
+  /* 침구 (C, D) */
+  $('sleeper').setAttribute('opacity', inBed() ? 1 : 0);
+  $('v-bed').textContent = `침구 습도 ${v.bed.toFixed(0)}%`;
+  $('v-phase').textContent = v.dry ? '침구 건조 중: 선풍기로 말림' : ['대기: 침구 센서로 취침을 기다림', '취침 중: 침구 센서로 판정', '기상: 침구 센서로 판정'][v.ph] || '';
+  $('v-phase').setAttribute('fill', v.dry ? '#2997ff' : '#aeaeb2');
+
   /* 표 3 */
   const ok = v.hi > v.lo;
   $('b-label').textContent = ok ? `${v.lo.toFixed(0)}~${v.hi.toFixed(0)}%` : '구간 없음';
@@ -455,13 +483,13 @@ function tick() {
   const rh = rhFromAh(room.ah, P.T_IN), wt = wallT();
   let shown;
   if (dk) {
-    send(`sim ${P.T_IN.toFixed(1)} ${rh.toFixed(1)} ${wt.toFixed(2)} 50 ${room.t.toFixed(1)}`);
+    send(`sim ${P.T_IN.toFixed(1)} ${rh.toFixed(1)} ${wt.toFixed(2)} ${room.bed.toFixed(1)} ${room.t.toFixed(1)}`);
     if (!lastVal) return;
     shown = lastVal;
   } else {
-    shown = localStep(room.t, P.T_IN, rh, wt);
+    shown = localStep(room.t, P.T_IN, rh, wt, room.bed);
   }
-  if (running || !hist.length) hist.push({ t: room.t, rh, srh: shown.srh, csrh: cmpSrh(), fan: shown.fan });
+  if (running || !hist.length) hist.push({ t: room.t, rh, srh: shown.srh, csrh: cmpSrh(), fan: shown.fan, bed: room.bed });
   render(shown);
 }
 function doReset() {

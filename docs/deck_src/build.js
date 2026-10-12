@@ -155,12 +155,12 @@ const stat = (ic, x, y, big, small) => {
   T(s, big, { x: x + 0.38, y, w: 1.9, h: 0.42, fontSize: 20, bold: true });
   T(s, small, { x, y: y + 0.44, w: 2.3, h: 0.3, fontSize: 10.5 });
 };
-stat("wave", 7.85, 4.5, "12 / 12", "허브 보고 / 수신 확인 (시연 1회)");
-stat("chart", 10.35, 4.5, "92 ms", "보고 후 허브 응답 (평균)");
+stat("wave", 7.85, 4.5, "14 / 14", "허브 보고 / 수신 확인 (시연 1회)");
+stat("chart", 10.35, 4.5, "93 ms", "보고 후 허브 응답 (평균)");
 stat("cpu", 7.85, 5.4, "42%", "Flash 사용 (RAM 36%)");
 stat("db", 10.35, 5.4, "v3.4.1", "nRF Connect SDK");
 T(s, two("왼쪽: SmartThings 앱 등록 화면", "앱은 센서 EP를 표시하지 않아 시연 화면에서 보여줌"), { x: 7.85, y: 6.3, w: 4.9, h: 0.48, fontSize: 10.5 });
-s.addNotes("펌웨어는 C와 C++로, 시연 화면은 JavaScript와 HTML로, 시험 도구는 Python으로 작성함. nRF Connect SDK v3.4.1의 Matter 예제 위에 엔드포인트를 직접 추가함. 습도와 온도는 표준 측정 클러스터로, 가습기와 선풍기는 On/Off로 노출함. 판단부가 속성을 설정하면 SDK가 허브로 ReportData를 보내고, 시연 1회 동안 12번 보고해 12번 모두 수신 확인을 받았으며 응답은 평균 92ms였음. 앱에서 직접 조작한 값은 콜백으로 받아 판단부에 반영함. 칩이 nRF54LM20B라 보드 타깃을 b로 빌드함.");
+s.addNotes("펌웨어는 C와 C++로, 시연 화면은 JavaScript와 HTML로, 시험 도구는 Python으로 작성함. nRF Connect SDK v3.4.1의 Matter 예제 위에 엔드포인트를 직접 추가함. 습도와 온도는 표준 측정 클러스터로, 가습기와 선풍기는 On/Off로 노출함. 판단부가 속성을 설정하면 SDK가 허브로 ReportData를 보내고, 시연 1회 동안 14번 보고해 14번 모두 수신 확인을 받았으며 응답은 평균 93ms였음. 앱에서 직접 조작한 값은 콜백으로 받아 판단부에 반영함. 칩이 nRF54LM20B라 보드 타깃을 b로 빌드함.");
 
 /* ---------- 4. 온디바이스 판단 ---------- */
 s = pres.addSlide({ masterName: "CONTENT", sectionTitle: process.env.SKIP_SECTION ? undefined : "주요 개발 내용" });
@@ -192,17 +192,17 @@ T(s, "RH표면 = 45 × 24.8 / 14.0 ≈ 80%", { x: 3.5, y: 6.17, w: 3.4, h: 0.56,
 
 T(s, "판단 규칙", { x: 7.45, y: 1.5, w: 5.3, h: 0.32, fontSize: 15, bold: true });
 const rules = [
-  ["shield", "A 곰팡이 방어", "벽 표면 75%에서 가습 정지, 70% 미만에서만 재개함"],
+  ["shield", "A 곰팡이 방어", "벽 표면 75%에서 가습 정지, 그래도 오르면 선풍기로 벽을 데움"],
   ["droplet", "B 점막 방어", "절대습도 6.5 g/㎥ 미만이면 가습, 8 g/㎥에서 정지함"],
-  ["fan", "선풍기 개입", "가습을 멈춰도 75% 이상이면 선풍기로 벽 표면을 데움"],
+  ["bed", "C 침구 건조", "기상 후 침구 60% 이상이면 가습을 멈추고 선풍기로 말림"],
+  ["history", "D 국면 판정", "침구 습도가 분당 0.3%p 넘게 오르면 취침, 내리면 기상"],
   ["brain", "E 학습", "선풍기 효과(시연 +2.8℃)를 재서 끄는 시점을 판단함"],
   ["chart", "E 예측", "벽 온도 추세로 임계 80%까지 남은 시간을 계산함"],
   ["join", "동시 가동", "선풍기로 넓힌 구간에서 켠 채 가습해 ②, ③을 함께 지킴"],
   ["user", "사용자 우선", "앱 조작은 30분 존중, 벽 표면 80%를 넘으면 방어를 우선함"],
-  ["history", "기록", "벽 표면 80% 이상인 시간을 누적 위험 시간으로 기록함"],
 ];
 rules.forEach(([ic, h, d], i) => iconRow(s, ic, 7.45, 1.98 + i * 0.6, 5.3, h, d, { d: 0.4, h: 0.56, size: 13, descSize: 12 }));
-s.addNotes("노드는 0.5초마다 벽 표면 습도와 절대습도를 계산함. 예를 들어 방이 21℃, 45%이고 벽이 12℃이면 벽 표면 습도는 약 80%로 곰팡이 임계에 닿음. 75%에서 가습을 멈추고, 그래도 오르면 선풍기를 켬. 선풍기를 켤 때 벽이 몇 도 오르는지 스스로 재서, 선풍기를 꺼도 안전한지를 판단함. 선풍기로 허용 구간을 넓힌 뒤에는 선풍기를 켠 채로 가습을 이어가 점막 방어와 곰팡이 방어를 동시에 지킴.");
+s.addNotes("노드는 0.5초마다 벽 표면 습도와 절대습도를 계산함. 예를 들어 방이 21℃, 45%이고 벽이 12℃이면 벽 표면 습도는 약 80%로 곰팡이 임계에 닿음. 75%에서 가습을 멈추고, 그래도 오르면 선풍기를 켬. 선풍기를 켤 때 벽이 몇 도 오르는지 스스로 재서, 선풍기를 꺼도 안전한지를 판단함. 선풍기로 허용 구간을 넓힌 뒤에는 선풍기를 켠 채로 가습을 이어가 점막 방어와 곰팡이 방어를 동시에 지킴. 침구 센서 하나로 취침과 기상을 알아내고, 기상 후 밤새 젖은 침구가 60% 이상이면 가습을 멈추고 선풍기로 50% 미만까지 말림.");
 
 /* ---------- 4. 시연 구성: 기기 간 연결과 기기별 역할 ---------- */
 if (!process.env.SKIP_SECTION) pres.addSection({ title: "시연 내용" });
@@ -230,7 +230,7 @@ device(["laptop"], CX[0], R1, "노트북", "가상 침실 계산, 시연 화면"
 device(["board"], CX[1], R1, "nRF54LM20 DK", "판단 노드, Matter 기기");
 device(["relay"], CX[2], R1, "2채널 릴레이", "가전 전원 개입");
 device(["fan", "humidifier"], CX[3], R1, "선풍기, 가습기", "벽 데움, 가습 (화면 속 가전)");
-device(["sensor"], CX[0], R2, "온습도, 벽 온도 센서", "실제 제품 구성", { ghost: true });
+device(["sensor"], CX[0], R2, "온습도, 벽 온도, 침구 센서", "실제 제품 구성", { ghost: true });
 device(["hub"], CX[1], R2, "SmartThings Station", "Thread 보더 라우터, 허브");
 device(["phone"], CX[2], R2, "SmartThings 앱", "등록, 원격 On/Off");
 /* 1행: 노트북 ↔ DK → 릴레이 → 가전 */
@@ -281,28 +281,28 @@ const RX = 10.95;
 s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: RX, y: WY + 0.34, w: 1.8, h: 1.98, rectRadius: 0.1, fill: { color: C.background2 }, line: { color: HEX.hair, width: 0.75 } });
 T(s, [{ text: "2채널 릴레이", options: { bold: true, breakLine: true } }, { text: "LOW에서 켜짐", options: { fontSize: 10, bold: false } }], { x: RX + 0.1, y: WY + 0.43, w: 1.4, h: 0.45, fontSize: 12 });
 s.addImage({ path: ICON("plug", "ink"), x: RX + 1.47, y: WY + 0.47, w: 0.24, h: 0.24, altText: "릴레이" });
+T(s, [{ text: "LED0 Matter, LED1 선풍기, LED2 가습기", options: { breakLine: true } }, { text: "LED3 벽 표면 80% 경고 (위험 표시)" }],
+  { x: WX + 0.13, y: WY + 0.7, w: 2.12, h: 0.3, fontSize: 8.5 });
 const pins = [
-  ["LED0 Matter 상태", "5V0", "DC+", "E30000", "5V 전원", ""],
-  ["LED1 선풍기", "GND", "DC−", "1D1D1F", "접지", ""],
-  ["LED2 가습기", "P1.20", "IN1", HEX.blue, "선풍기 신호", "CH1 선풍기"],
-  ["LED3 표면 80%↑", "P1.21", "IN2", "F08A00", "가습기 신호", "CH2 가습기"],
+  ["5V 전원", "5V0", "DC+", "E30000", ""],
+  ["접지", "GND", "DC−", "1D1D1F", ""],
+  ["선풍기 신호", "P1.20", "IN1", HEX.blue, "CH1 선풍기"],
+  ["가습기 신호", "P1.21", "IN2", "F08A00", "CH2 가습기"],
 ];
-pins.forEach(([led, dk, rl, col, wire, ch], i) => {
-  const y = WY + 0.9 + i * 0.35;
-  s.addShape(pres.shapes.OVAL, { x: WX + 0.13, y: y + 0.1, w: 0.11, h: 0.11, fill: { color: "30D158" }, line: { color: "30D158", width: 0 } });
-  T(s, led, { x: WX + 0.29, y, w: 1.25, h: 0.3, fontSize: 9.5, valign: "middle" });
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: WX + 1.55, y, w: 0.68, h: 0.3, rectRadius: 0.05, fill: { color: "FFFFFF" }, line: { color: "C7C7CC", width: 0.75 } });
-  T(s, dk, { x: WX + 1.55, y, w: 0.68, h: 0.3, fontSize: 10, bold: true, align: "center", valign: "middle" });
-  s.addShape(pres.shapes.LINE, { x: WX + 2.23, y: y + 0.15, w: RX + 0.1 - WX - 2.23, h: 0, line: { color: col, width: 3 } });
-  T(s, wire, { x: WX + 2.2, y: y - 0.11, w: RX + 0.16 - WX - 2.2, h: 0.2, fontSize: 9, align: "center" });
-  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: RX + 0.1, y, w: 0.55, h: 0.3, rectRadius: 0.05, fill: { color: "FFFFFF" }, line: { color: "C7C7CC", width: 0.75 } });
-  T(s, rl, { x: RX + 0.1, y, w: 0.55, h: 0.3, fontSize: 10, bold: true, align: "center", valign: "middle" });
+pins.forEach(([sig, dk, rl, col, ch], i) => {
+  const y = WY + 1.03 + i * 0.33;
+  T(s, sig, { x: WX + 0.13, y, w: 1.35, h: 0.28, fontSize: 9.5, valign: "middle" });
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: WX + 1.55, y, w: 0.68, h: 0.28, rectRadius: 0.05, fill: { color: "FFFFFF" }, line: { color: "C7C7CC", width: 0.75 } });
+  T(s, dk, { x: WX + 1.55, y, w: 0.68, h: 0.28, fontSize: 10, bold: true, align: "center", valign: "middle" });
+  s.addShape(pres.shapes.LINE, { x: WX + 2.23, y: y + 0.14, w: RX + 0.1 - WX - 2.23, h: 0, line: { color: col, width: 3 } });
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: RX + 0.1, y, w: 0.55, h: 0.28, rectRadius: 0.05, fill: { color: "FFFFFF" }, line: { color: "C7C7CC", width: 0.75 } });
+  T(s, rl, { x: RX + 0.1, y, w: 0.55, h: 0.28, fontSize: 10, bold: true, align: "center", valign: "middle" });
   if (ch) {
-    s.addImage({ path: ICON(i === 2 ? "fan" : "mist", i === 2 ? "blue" : "ink"), x: RX + 0.7, y: y + 0.04, w: 0.22, h: 0.22, altText: ch });
-    T(s, ch, { x: RX + 0.95, y, w: 0.85, h: 0.3, fontSize: 9.5, bold: true, valign: "middle" });
+    s.addImage({ path: ICON(i === 2 ? "fan" : "mist", i === 2 ? "blue" : "ink"), x: RX + 0.7, y: y + 0.03, w: 0.22, h: 0.22, altText: ch });
+    T(s, ch, { x: RX + 0.95, y, w: 0.85, h: 0.28, fontSize: 9.5, bold: true, valign: "middle" });
   }
 });
-s.addNotes("시연에 쓰는 기기와 연결임. 노트북은 가상 침실을 계산해 센서 대신 0.5초마다 USB로 DK에 값을 보내고, DK는 벽 표면 습도를 계산해 판단한 뒤 GPIO로 릴레이를 움직여 선풍기와 가습기 전원을 켜고 끔. 같은 결과는 Thread로 SmartThings Station에 Matter 보고되고, 앱에서 상태를 보고 조작할 수 있음. 실제 제품에서는 노트북 자리에 온습도 센서와 벽 온도 센서가 들어감. 릴레이는 LOW에서 켜지는 모듈이라 overlay에서 핀을 active-low로 정의했고, P1.22는 DK의 LED0 핀과 겹쳐 P1.21로 옮김.");
+s.addNotes("시연에 쓰는 기기와 연결임. 노트북은 가상 침실을 계산해 센서 대신 0.5초마다 USB로 DK에 값을 보내고, DK는 벽 표면 습도를 계산해 판단한 뒤 GPIO로 릴레이를 움직여 선풍기와 가습기 전원을 켜고 끔. 같은 결과는 Thread로 SmartThings Station에 Matter 보고되고, 앱에서 상태를 보고 조작할 수 있음. 실제 제품에서는 노트북 자리에 온습도 센서, 벽 온도 센서, 침구 센서가 들어감. DK의 LED3은 벽 표면이 임계 80%에 닿으면 켜지는 위험 표시이고, 가습기 정지는 75%에서 판단부가 P1.21로 내보냄. 릴레이는 LOW에서 켜지는 모듈이라 overlay에서 핀을 active-low로 정의했고, P1.22는 DK의 LED0 핀과 겹쳐 P1.21로 옮김.");
 
 /* ---------- 5. 시연 화면과 구동 순서 ---------- */
 s = pres.addSlide({ masterName: "CONTENT", sectionTitle: process.env.SKIP_SECTION ? undefined : "시연 내용" });
@@ -311,17 +311,17 @@ tracker(s, 2);
 s.addText("한파의 밤 10시간을 60초로 재현해 누적 위험 시간 0분을 달성함", { placeholder: "title" });
 const sw = 7.9, sh = Math.min(sw * SCENE_RATIO, 4.3);
 s.addImage({ path: SCENE, x: 0.6, y: 1.5, w: sh / SCENE_RATIO, h: sh, altText: "시연 화면: 가상 침실과 판단 노드" });
-T(s, "실제 보드를 연결한 03:00 화면. 실내와 벽 표면 습도, 노드의 판단, 가습기와 선풍기, 허브 보고를 한 화면에 보여줌",
+T(s, "실제 보드를 연결한 07:40 화면. 기상을 감지해 침구를 말리는 중이고, 아래에 밤새 벽 표면 기록이 보임",
   { x: 0.6, y: 1.5 + sh + 0.08, w: 7.9, h: 0.3, fontSize: 11 });
 
 /* 구동 순서: ①~⑤를 0.5초마다 반복, ⑥ 결과 */
 const seq = [
-  ["laptop", "① 가상 침실", ["한파의 밤 10시간을 60초로 진행함", "가전 상태를 반영해 온습도와 벽 온도를 만듦"]],
+  ["laptop", "① 가상 침실", ["한파의 밤 10시간을 60초로 진행함", "가전 상태를 반영해 온습도, 벽, 침구 값을 만듦"]],
   ["upload", "② 센서값 전송", ["0.5초마다 USB로 DK에 보냄", "실제 제품에서는 센서가 이 값을 측정함"]],
-  ["cpu", "③ DK 판단", ["벽 표면 습도와 절대습도를 계산해", "가습기와 선풍기 ON/OFF를 결정함"]],
+  ["cpu", "③ DK 판단", ["벽 표면, 절대습도, 침구 습도를 계산해", "가습기와 선풍기 ON/OFF를 결정함"]],
   ["plug", "④ 릴레이 구동", ["CH1 선풍기, CH2 가습기 전원을 켜고 끔", "딸깍 소리와 함께 가전이 실제로 바뀜"]],
-  ["wave", "⑤ Matter 보고", ["같은 결과를 SmartThings 허브에 보고함", "12회 모두 수신 확인, 평균 92ms"]],
-  ["shield", "⑥ 결과: 누적 위험 시간", ["우리 노드 0분, 최고 벽 표면 78%", "일반 가습기였다면 8시간 38분, 결로 6시간 14분"]],
+  ["wave", "⑤ Matter 보고", ["같은 결과를 SmartThings 허브에 보고함", "14회 모두 수신 확인, 평균 93ms"]],
+  ["shield", "⑥ 결과: 누적 위험 시간", ["우리 노드 0분, 최고 벽 표면 77%", "일반 가습기였다면 8시간 38분, 결로 6시간 14분"]],
 ];
 s.addShape(pres.shapes.LINE, { x: 9.06, y: 1.71, w: 0, h: 3.6, line: { color: HEX.hair, width: 1.5 } });
 /* ⑤ → ① 되돌아가는 점선 (닫힌 고리) */
@@ -330,14 +330,15 @@ s.addShape(pres.shapes.LINE, { x: 8.64, y: 1.71, w: 0, h: 2.88, line: { color: "
 s.addShape(pres.shapes.LINE, { x: 8.64, y: 1.71, w: 0.21, h: 0, line: { color: "8E8E93", width: 1.5, dashType: "dash", endArrowType: "triangle" } });
 seq.forEach(([ic, h, d], i) => iconRow(s, ic, 8.85, 1.5 + i * 0.72, 3.9, h, d, { d: 0.42, h: 0.66, size: 13, descSize: 11.5 }));
 
-const tl = [["22:00", "건조 → 가습 시작"], ["01:00", "표면 75% → 가습 정지"], ["01:10", "선풍기 ON, 효과 학습"], ["02:55~", "선풍기 켠 채 가습"], ["07:30", "벽 회복 → 선풍기 OFF"]];
+const tl = [["22:00", "건조 → 가습 시작"], ["22:45", "취침 감지 (침구 센서)"], ["01:00", "표면 75% → 가습 정지"], ["01:05", "선풍기 ON, 효과 학습"],
+  ["02:45~", "선풍기 켠 채 가습"], ["07:30", "벽 회복 → 선풍기 OFF"], ["07:35", "기상 감지 → 침구 건조"]];
 s.addShape(pres.shapes.LINE, { x: 0.7, y: 6.36, w: 11.95, h: 0, line: { color: HEX.hair, width: 1.5 } });
 tl.forEach(([t, d], i) => {
-  const x = 0.6 + i * 2.45;
+  const x = 0.6 + i * 1.76;
   s.addShape(pres.shapes.OVAL, { x, y: 6.27, w: 0.18, h: 0.18, fill: { color: C.accent1 }, line: { color: HEX.blue, width: 0 } });
-  T(s, [{ text: t, options: { bold: true, breakLine: true } }, { text: d, options: {} }], { x, y: 6.5, w: 2.3, h: 0.5, fontSize: 12 });
+  T(s, [{ text: t, options: { bold: true, breakLine: true } }, { text: d, options: {} }], { x, y: 6.5, w: 1.72, h: 0.5, fontSize: 11 });
 });
-s.addNotes("시연은 오른쪽 순서로 동작함. 노트북의 가상 침실이 한파의 밤을 진행하며 0.5초마다 센서값을 DK로 보내고, DK가 벽 표면 습도를 계산해 릴레이로 가습기와 선풍기를 켜고 끄며, 같은 결과를 SmartThings 허브에 보고함. 바뀐 가전 상태는 다시 가상 침실에 반영됨. 실내 습도는 40%대에 머무는데 벽 표면 습도만 올라가고, 75%에서 노드가 가습을 멈춘 뒤 선풍기로 벽을 데움. 같은 밤 일반 가습기였다면 8시간 넘게 곰팡이 임계를 넘고, 그중 6시간 넘게 벽이 이슬점(12.9℃)보다 차가워 결로가 생겼을 것을 우리 노드는 0분으로 막음.");
+s.addNotes("시연은 오른쪽 순서로 동작함. 노트북의 가상 침실이 한파의 밤을 진행하며 0.5초마다 센서값을 DK로 보내고, DK가 벽 표면 습도를 계산해 릴레이로 가습기와 선풍기를 켜고 끄며, 같은 결과를 SmartThings 허브에 보고함. 바뀐 가전 상태는 다시 가상 침실에 반영됨. 실내 습도는 40%대에 머무는데 벽 표면 습도만 올라가고, 75%에서 노드가 가습을 멈춘 뒤 선풍기로 벽을 데움. 아침에는 침구 습도가 내려가는 것으로 기상을 알아내고 젖은 침구를 선풍기로 말림. 같은 밤 일반 가습기였다면 8시간 넘게 곰팡이 임계를 넘고, 그중 6시간 넘게 벽이 이슬점(12.9℃)보다 차가워 결로가 생겼을 것을 우리 노드는 0분으로 막음.");
 
 /* ---------- 수식 (OMML): PowerPoint 수식 개체. 변수는 기울임 Cambria Math, 한글 첨자는 Pretendard ---------- */
 const INK = `<a:solidFill><a:srgbClr val="000000"/></a:solidFill>`;

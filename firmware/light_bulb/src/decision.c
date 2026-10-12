@@ -15,12 +15,20 @@
 #define LEARN_MIN  3.0f  /* 선풍기를 켠 뒤 효과를 재는 시간 (분) */
 #define LEARN_MAX 15.0f  /* 효과가 안 보일 때 기다리는 최대 시간 (분) */
 #define MANUAL_MIN 30.0f /* 앱에서 직접 조작하면 이 시간 동안 존중 (분), 단 80% 이상이면 방어 우선 */
+#define BED_RATE   0.3f  /* D 국면 판정: 침구 습도가 분당 이만큼 오르면 취침, 내리면 기상 (%p/분) */
+#define BED_GAP    5.0f  /* 취침 판정: 침구가 실내보다 이만큼 이상 습할 때만 (%p) */
+#define BED_DRY_ON 60.0f /* C 침구 건조: 기상 후 침구 습도가 이 이상이면 선풍기로 말림 (진드기 번식 습도) */
+#define BED_DRY_OFF 50.0f /* 이 아래로 마르면 건조 끝 */
+#define DRY_MAX   45.0f  /* 건조 최대 시간 (분) */
+
+enum { PH_IDLE, PH_SLEEP, PH_WAKE };
 
 struct inputs g_in = { 21.0f, 45.0f, 21.0f, 50.0f };
 static struct node_status st;
 static float sim_t = -1.0f;   /* 가상 시각(분). sim 명령에 없으면 업타임 사용 */
 static float hold_min = 1.0f; /* 최소 유지 시간 60초 */
 static float prev_t = -1.0f, last_change_t, fan_on_t, wall_before_fan, prev_wall_nf, slope;
+static float prev_bed = -1.0f, dry_t;
 static bool measuring;
 static float manual_until = -1.0f;
 K_MUTEX_DEFINE(dlock);
@@ -107,6 +115,20 @@ static void step(void)
 		st.risk_min += dt;
 	}
 
+	/* D 국면 판정: 침구 센서 하나로 취침과 기상을 알아낸다 (사용자 설정 없음) */
+	if (dt > 0.0f && prev_bed >= 0.0f) {
+		st.bed_rate = 0.5f * st.bed_rate + 0.5f * (g_in.bed_rh - prev_bed) / dt;
+	}
+	prev_bed = g_in.bed_rh;
+	if (st.phase != PH_SLEEP && st.bed_rate >= BED_RATE && g_in.bed_rh >= g_in.room_rh + BED_GAP) {
+		st.phase = PH_SLEEP;
+		emit("EVT t=%.1f phase=1 bed=%.1f why=bed_rise sleep\n", (double)t, (double)g_in.bed_rh);
+	} else if (st.phase == PH_SLEEP && st.bed_rate <= -BED_RATE) {
+		st.phase = PH_WAKE;
+		emit("EVT t=%.1f phase=2 bed=%.1f why=bed_fall wake\n", (double)t, (double)g_in.bed_rh);
+	}
+	bool bed_wet = st.phase == PH_WAKE && g_in.bed_rh >= BED_DRY_ON;
+
 	bool h = st.humid, f = st.fan;
 	bool held = (t - last_change_t) >= hold_min;
 	if (manual_until >= 0.0f && (t >= manual_until || st.srh >= ISO_TH)) {
@@ -127,21 +149,37 @@ static void step(void)
 		wall_before_fan = g_in.wall_t;
 		measuring = true;
 		set_outputs(h, true, "srh>=75 fan_on");
-	} else if (f && !measuring && held && srh_target_nf < OFF_TH) {
-		/* 학습한 선풍기 효과를 빼고도 70% 아래일 때만 끈다 */
+	} else if (!st.drying && bed_wet) {
+		/* C 침구 건조: 기상 후 밤새 젖은 침구를 선풍기로 말린다 */
+		st.drying = true;
+		dry_t = t;
+		if (!f) {
+			set_outputs(h, true, "bed>=60 dry_on");
+		} else {
+			emit("EVT t=%.1f bed=%.1f why=bed>=60 dry_keep\n", (double)t, (double)g_in.bed_rh);
+		}
+	} else if (st.drying && (g_in.bed_rh < BED_DRY_OFF || t - dry_t >= DRY_MAX)) {
+		st.drying = false;
+		if (f && !measuring && srh_target_nf < OFF_TH) {
+			set_outputs(h, false, "bed<50 dry_off");
+		} else {
+			emit("EVT t=%.1f bed=%.1f why=bed<50 dry_done\n", (double)t, (double)g_in.bed_rh);
+		}
+	} else if (f && !measuring && held && !st.drying && srh_target_nf < OFF_TH) {
+		/* 학습한 선풍기 효과를 빼고도 70% 아래일 때만 끈다 (침구 건조 중에는 유지) */
 		set_outputs(h, false, "srh_nofan<70 fan_off");
-	} else if (!h && held && st.ah < AH_START && st.srh < OFF_TH) {
-		/* B 절대습도 확보: 70% 재개선 안쪽에서만 가습 */
+	} else if (!h && held && !st.drying && st.ah < AH_START && st.srh < OFF_TH) {
+		/* B 절대습도 확보: 70% 재개선 안쪽에서만 가습 (침구를 말리는 동안은 미룸) */
 		set_outputs(true, f, f ? "ah<6.5 humid_on band_by_fan" : "ah<6.5 humid_on");
 	} else if (h && st.ah >= AH_STOP) {
 		set_outputs(false, f, "ah>=8 humid_off");
 	}
 
 	emit("VAL t=%.1f rh=%.1f wt=%.2f srh=%.1f ah=%.2f humid=%d fan=%d lo=%.1f hi=%.1f hinf=%.1f eta=%.0f "
-	     "risk=%.1f gain=%.2f\n",
+	     "risk=%.1f gain=%.2f bed=%.1f ph=%d dry=%d\n",
 	     (double)t, (double)g_in.room_rh, (double)g_in.wall_t, (double)st.srh, (double)st.ah, st.humid, st.fan,
 	     (double)st.band_lo, (double)st.band_hi, (double)st.band_hi_nf, (double)st.eta_min, (double)st.risk_min,
-	     (double)st.fan_gain);
+	     (double)st.fan_gain, (double)g_in.bed_rh, st.phase, st.drying);
 	k_mutex_unlock(&dlock);
 	inputs_changed();
 }
@@ -157,6 +195,10 @@ static void decision_reset(void)
 	measuring = false;
 	st.risk_min = 0.0f;
 	st.fan_gain = 0.0f;
+	st.phase = PH_IDLE;
+	st.drying = false;
+	st.bed_rate = 0.0f;
+	prev_bed = -1.0f;
 	set_outputs(false, false, "reset");
 	last_change_t = -hold_min;
 	k_mutex_unlock(&dlock);
