@@ -217,7 +217,7 @@ badge(s, "calc", 0.85, 1.72, 0.42);
 T(s, "계산: 차가운 벽 앞 공기의 습도를 구함", { x: 1.42, y: 1.68, w: 5.5, h: 0.3, fontSize: 16, bold: true });
 T(s, "DK가 0.5초마다 직접 계산함, 클라우드 불필요", { x: 1.42, y: 1.99, w: 5.5, h: 0.24, fontSize: 11.5 });
 /* 수식 자리: 상자에는 대체 글자를 넣고, finish()가 PowerPoint 수식 개체로 바꿈 (eq*: 수식만, mx_*: 글자와 수식이 섞인 줄) */
-T(s, "T실내 방 온도, T벽 벽 표면 온도, RH 상대습도(%), Pₛ 포화 수증기압(hPa)", { x: 0.85, y: 2.36, w: 6.1, h: 0.34, fontSize: 11.5, valign: "middle", objectName: "mx_lg" });
+T(s, "T실내: 방 온도, T벽: 벽 표면 온도, RH: 상대습도(%), Pₛ: 포화 수증기압(hPa)", { x: 0.85, y: 2.36, w: 6.1, h: 0.34, fontSize: 11.5, valign: "middle", objectName: "mx_lg" });
 s.addShape(pres.shapes.LINE, { x: 0.85, y: 2.8, w: 6.05, h: 0, line: { color: HEX.hair, width: 0.75 } });
 const calc = [
   ["① 포화 수증기압", ["온도별로 공기가 품을 수 있는", "수증기의 최대치임"], "Pₛ(T) = 6.112 exp(17.62T / (243.12 + T))"],
@@ -304,7 +304,7 @@ const DISPLAY = {
 };
 /* 글자 사이에 수식이 들어가는 줄: ["t", 글자] | ["m", 수식] */
 const INLINE = {
-  mx_lg: [["m", Tk("실내")], ["t", " 방 온도,   "], ["m", Tk("벽")], ["t", " 벽 표면 온도,   "], ["m", mp("RH")], ["t", " 상대습도(%),   "], ["m", sub(mi("P"), mp("s"))], ["t", " 포화 수증기압(hPa)"]],
+  mx_lg: [["m", Tk("실내")], ["t", ": 방 온도,  "], ["m", Tk("벽")], ["t", ": 벽 표면 온도,  "], ["m", mp("RH")], ["t", ": 상대습도(%),  "], ["m", sub(mi("P"), mp("s"))], ["t", ": 포화 수증기압(hPa)"]],
 };
 const NS_M = "http://schemas.openxmlformats.org/officeDocument/2006/math";
 const NS_A14 = "http://schemas.microsoft.com/office/drawing/2010/main";
